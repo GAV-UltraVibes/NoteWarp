@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NoteWarp - Упрощённый редактор</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .app-title {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif;
+            font-weight: normal;
+            font-size: 2.8em;
+            background: linear-gradient(45deg, #007cba, #00cc66);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 10px 0;
+            letter-spacing: -0.5px;
+        }
+        .tabs {
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .tab-button.active {
+            background-color: #007cba;
+            color: white;
+        }
+        #editor-tab, #dictionary-tab {
+            display: none;
+        }
+        #editor-tab.active, #dictionary-tab.active {
+            display: block;
+        }
+        #editor {
+            width: 100%;
+            height: 60vh;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            outline: none;
+            background-color: white;
+            box-sizing: border-box;
+        }
+        #editor:focus {
+            border-color: #007cba;
+        }
+        .save-panel {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .save-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .filename-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .save-button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .save-button:hover {
+            background-color: #218838;
+        }
+        .save-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .filename-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .dictionary-manager {
+            display: block;
+        }
+        .shortcuts-list {
+            width: 48%;
+            float: left;
+            border: transparent;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .replacement-editor {
+            width: 48%;
+            float: right;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        /* НОВЫЕ СТИЛИ ДЛЯ ВИЗУАЛЬНОГО ВЫДЕЛЕНИЯ БЛОКОВ */
+        .dictionary-panel {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .dictionary-panel h3 {
+            margin-top: 0;
+            color: #007cba;
+        }
+        .editing-dict-panel {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+        }
+        .editing-dict-panel h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .editing-substitution-panel {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .editing-substitution-panel h3 {
+            margin-top: 0;
+            color: #007cba;
+        }
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            transition: all 0.3s;
+        }
+        .drop-zone.dragover {
+            border-color: #007cba;
+            background-color: #e3f2fd;
+        }
+        .dictionary-buttons {
+            display: block;
+        }
+        .dictionary-buttons button {
+            padding: 8px 15px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .dictionary-buttons button:hover {
+            background-color: #138496;
+        }
+        .shortcut-table-container {
+            max-height: 35vh;
+            overflow-y: auto;
+            margin-bottom: 5px;
+        }
+        .current-dict-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+        .shortcut-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .shortcut-table th, .shortcut-table td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+        .shortcut-table th {
+            background-color: #f2f2f2;
+        }
+        .shortcut-table tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .shortcut-table tr.selected {
+            background-color: #007cba;
+            color: white;
+        }
+        .shortcut-edit-field {
+            margin-bottom: 10px;
+        }
+        .shortcut-edit-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .shortcut-edit-field input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            box-sizing: border-box;
+        }
+        .replacement-edit-field {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .replacement-edit-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .replacement-edit-field textarea {
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            border-radius: 3px;
+            height: 60vh;
+			resize: none;
+        }
+        .editor-buttons {
+            display: block;
+            text-align: right;
+        }
+        .editor-buttons button {
+            padding: 8px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .editor-buttons button.save {
+            background-color: #28a745;
+            color: white;
+        }
+        .editor-buttons button.save:hover {
+            background-color: #218838;
+        }
+        .editor-buttons button.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        .editor-buttons button.delete:hover {
+            background-color: #c82333;
+        }
+        .editor-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .word-wrap-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .word-wrap-option input {
+            margin: 0;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .dictionaries-list-container {
+            margin-top: 15px;
+        }
+        .dictionaries-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        .dictionaries-table th, .dictionaries-table td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+        .dictionaries-table th {
+            background-color: #f2f2f2;
+        }
+        .dictionaries-table .toggle-cell {
+            width: 1%;
+            white-space: nowrap;
+        }
+        .dictionaries-table .name-cell {
+            width: auto;
+        }
+        .dictionaries-table .actions-cell {
+            width: 1%;
+            white-space: nowrap;
+        }
+        .conflict-status {
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            border-radius: 3px;
+            font-size: 12px;
+            display: none;
+        }
+        /* Всплывающее окно */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            width: 300px;
+        }
+        .popup-content input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .popup-content button {
+            padding: 8px 15px;
+            margin-right: 10px;
+        }
+        /* НОВЫЙ CSS-КЛАСС для визуального выделения конфликтующих строк */
+        .conflicting-shortcut-row {
+            color: #dc3545; /* Красный цвет текста */
+            font-weight: bold;
+            background-color: #ffeef0; /* Светло-розовый фон */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">NoteWarp</div>
+    </div>
+    <div class="tabs">
+        <button class="tab-button active" data-tab="editor-tab">Редактор</button>
+        <button class="tab-button" data-tab="dictionary-tab">Словарь</button>
+    </div>
+    <div id="editor-tab" class="active">
+        <div style="margin-bottom: 10px;">
+            <label class="word-wrap-option">
+                <input type="checkbox" id="word-wrap-checkbox"> Перенос строк по словам
+            </label>
+        </div>
+        <textarea id="editor" style="width:100%; height:400px; font-family: 'Courier New', monospace; font-size: 14px;"></textarea>
+        <div class="save-panel">
+            <div class="save-controls">
+                <input type="text" class="filename-input" id="filename-input" placeholder="Введите имя файла (без расширения)">
+                <button class="save-button" id="save-file-btn">Сохранить</button>
+            </div>
+            <div class="filename-error" id="filename-error"></div>
+        </div>
+    </div>
+    <div id="dictionary-tab">
+        <div class="dictionary-manager">
+            <div class="shortcuts-list">
+                <!-- Блок "Управление словарями" -->
+                <div class="dictionary-panel">
+                    <h3>Управление словарями</h3>
+                    <!-- Таблица загруженных словарей -->
+                    <div class="dictionaries-list-container">
+                        <table class="dictionaries-table">
+                            <thead>
+                                <tr>
+                                    <th>Вкл</th>
+                                    <th>Имя файла</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dictionaries-table-body">
+                            </tbody>
+                        </table>
+                        <div id="conflict-status" class="conflict-status"></div>
+                    </div>
+                    <div class="drop-zone" id="drop-zone">
+                        Перетащите файл словаря (TXT) сюда
+                    </div>
+                </div>
+                <!-- Блок "Редактирование словаря" -->
+                <div class="editing-dict-panel">
+                    <h3 id="editing-dict-title">Редактирование словаря</h3> <!-- Изменено: id для заголовка -->
+                    <div class="shortcut-table-container">
+                        <!-- УДАЛЕНО: div.current-dict-name -->
+                        <table class="shortcut-table">
+                            <thead>
+                                <tr>
+                                    <th>Сокращение</th>
+                                    <th>Подстановка</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shortcuts-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="replacement-editor">
+                <!-- Блок "Редактирование подстановки" без заголовка -->
+                <div class="editing-substitution-panel">
+                    <div class="shortcut-edit-field">
+                        <label for="edit-shortcut">Сокращение:</label>
+                        <input type="text" id="edit-shortcut" placeholder="Введите сокращение">
+                        <div class="error-message" id="shortcut-error"></div>
+                    </div>
+                    <div class="replacement-edit-field">
+                        <label for="edit-replacement">Подстановка:</label>
+                        <textarea id="edit-replacement" placeholder="Введите текст подстановки"></textarea>
+                    </div>
+                    <div class="editor-buttons">
+                        <button id="delete-shortcut-btn" class="delete" disabled>Удалить</button>
+                        <button id="save-shortcut-btn" class="save">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Утилиты
+        class DOMUtils {
+            static showError(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+            static clearError(element) {
+                element.style.display = 'none';
+            }
+            // Новый метод для всплывающего окна ввода имени маркера
+            static createTagInputPopup(callback) {
+                const overlay = document.createElement('div');
+                overlay.className = 'popup-overlay';
+                overlay.innerHTML = `
+                    <div class="popup-content">
+                        <h3>Введите имя маркера</h3>
+                        <input type="text" id="tag-input" placeholder="Имя маркера">
+                        <button id="popup-ok-btn">Ок</button>
+                        <button id="popup-cancel-btn">Отмена</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                const input = document.getElementById('tag-input');
+                const okBtn = document.getElementById('popup-ok-btn');
+                const cancelBtn = document.getElementById('popup-cancel-btn');
+                // Обработчик Enter в поле ввода
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const name = input.value.trim();
+                        if (name.includes(' ')) {
+                            alert('Имя маркера не должно содержать пробелы.');
+                            return;
+                        }
+                        if (name) {
+                            callback(name);
+                        }
+                        document.body.removeChild(overlay);
+                        // Возвращаем фокус в редактор
+                        document.getElementById('editor').focus();
+                    }
+                });
+                okBtn.addEventListener('click', () => {
+                    const name = input.value.trim();
+                    if (name.includes(' ')) {
+                        alert('Имя маркера не должно содержать пробелы.');
+                        return;
+                    }
+                    if (name) {
+                        callback(name);
+                    }
+                    document.body.removeChild(overlay);
+                    // Возвращаем фокус в редактор
+                    document.getElementById('editor').focus();
+                });
+                cancelBtn.addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    // Возвращаем фокус в редактор
+                    document.getElementById('editor').focus();
+                });
+                input.focus();
+            }
+        }
+        class TextManipulator {
+            static insertTextAtCursor(text, element) {
+                const startPos = element.selectionStart;
+                const endPos = element.selectionEnd;
+                const before = element.value.substring(0, startPos);
+                const after = element.value.substring(endPos);
+                element.value = before + text + after;
+                element.setSelectionRange(startPos + text.length, startPos + text.length);
+            }
+        }
+        class AutoReplacer {
+            constructor(dictionaryManager, maxBufferSize = 50) {
+                this.dictionaryManager = dictionaryManager;
+                this.maxBufferSize = maxBufferSize;
+            }
+            updateBuffer(buffer, text) {
+                buffer += text;
+                if (buffer.length > this.maxBufferSize) {
+                    buffer = buffer.slice(-this.maxBufferSize);
+                }
+                return buffer;
+            }
+            checkAndReplace(buffer, element, insertCallback) {
+                const dictionary = this.dictionaryManager.getActiveDictionary();
+                const sortedKeys = Object.keys(dictionary).sort((a, b) => b.length - a.length);
+                for (let word of sortedKeys) {
+                    if (buffer.endsWith(word)) {
+                        const replacement = dictionary[word];
+                        insertCallback(word, replacement);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        class HistoryManager {
+            constructor(maxSize = 100) {
+                this.history = [];
+                this.index = -1;
+                this.maxSize = maxSize;
+            }
+            pushState(state) {
+                if (this.index < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.index + 1);
+                }
+                this.history.push(state);
+                this.index++;
+                if (this.history.length > this.maxSize) {
+                    this.history.shift();
+                    this.index--;
+                }
+            }
+            undo() {
+                if (this.index > 0) {
+                    this.index--;
+                    return this.history[this.index];
+                }
+                return null;
+            }
+            redo() {
+                if (this.index < this.history.length - 1) {
+                    this.index++;
+                    return this.history[this.index];
+                }
+                return null;
+            }
+        }
+        class TextEditor {
+            constructor(element, dictManager) {
+                this.editor = element; // Это textarea
+                this.dictionaryManager = dictManager;
+                this.lastSearchPositions = {};
+                this.inputBuffer = "";
+                this.isUndoRedoOperation = false;
+                this.autoReplacer = new AutoReplacer(dictManager);
+                this.historyManager = new HistoryManager(100);
+                this.setupEventListeners();
+                this.setupWordWrap();
+                this.setupSaveFunctionality();
+                this.setInitialFilename();
+                this.saveHistoryState();
+            }
+            setupEventListeners() {
+                this.editor.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                this.editor.addEventListener('input', (e) => this.handleInput(e));
+                this.editor.addEventListener('paste', (e) => this.handlePaste(e));
+            }
+            setupWordWrap() {
+                const checkbox = document.getElementById('word-wrap-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.editor.wrap = 'soft';
+                    } else {
+                        this.editor.wrap = 'off';
+                    }
+                });
+            }
+            setupSaveFunctionality() {
+                const saveBtn = document.getElementById('save-file-btn');
+                const filenameInput = document.getElementById('filename-input');
+                // Обработчик потери фокуса у поля имени файла
+                filenameInput.addEventListener('blur', () => {
+                    const currentFilename = filenameInput.value;
+                    const processedFilename = this.processFilenameTemplate(currentFilename);
+                    if (processedFilename !== currentFilename) {
+                        // Сохраняем историю ДО изменения, если применимо
+                        // (В данном случае, мы меняем значение вручную, возможно, не нужно сохранять историю изменения поля)
+                        filenameInput.value = processedFilename;
+                        // console.log("Имя файла обновлено по шаблону:", processedFilename); // Опциональный лог
+                    }
+                });
+                saveBtn.addEventListener('click', () => this.saveFile());
+                filenameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.saveFile();
+                });
+            }
+            setInitialFilename() {
+                const now = new Date();
+                const isoDate = now.toISOString().split('T')[0];
+                const time = now.toTimeString().split(' ')[0].substring(0, 5).replace(':', '-');
+                const defaultFilename = isoDate + ' ' + time;
+                document.getElementById('filename-input').value = defaultFilename;
+            }
+            saveFile() {
+                let filename = document.getElementById('filename-input').value.trim();
+                const errorElement = document.getElementById('filename-error');
+                // Обработка тега [[имя]] перед валидацией
+                filename = this.processFilenameTemplate(filename);
+                if (!filename) {
+                    DOMUtils.showError(errorElement, 'Имя файла не может быть пустым');
+                    return;
+                }
+                const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
+                if (invalidChars.test(filename)) {
+                    DOMUtils.showError(errorElement, 'Недопустимые символы');
+                    return;
+                }
+                if (filename.length > 255) {
+                    DOMUtils.showError(errorElement, 'Имя файла слишком длинное');
+                    return;
+                }
+                DOMUtils.clearError(errorElement);
+                const content = this.editor.value;
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename + '.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            saveHistoryState() {
+                const content = this.editor.value;
+                const cursorPos = this.getCursorPosition();
+                this.historyManager.pushState({ content, cursorPos });
+            }
+            undo() {
+                const state = this.historyManager.undo();
+                if (state) {
+                    this.isUndoRedoOperation = true;
+                    this.editor.value = state.content;
+                    this.setCursorPosition(state.cursorPos);
+                    setTimeout(() => this.isUndoRedoOperation = false, 0);
+                }
+            }
+            redo() {
+                const state = this.historyManager.redo();
+                if (state) {
+                    this.isUndoRedoOperation = true;
+                    this.editor.value = state.content;
+                    this.setCursorPosition(state.cursorPos);
+                    setTimeout(() => this.isUndoRedoOperation = false, 0);
+                }
+            }
+            getCursorPosition() {
+                return this.editor.selectionStart;
+            }
+            setCursorPosition(position) {
+                this.editor.setSelectionRange(position, position);
+            }
+            selectText(start, end) {
+                this.editor.setSelectionRange(start, end);
+            }
+            handleKeyDown(e) {
+                if (e.ctrlKey) {
+                    const isDigit = e.key >= '0' && e.key <= '9';
+                    const isStar = e.key === '*';
+                    if (isDigit || isStar) {
+                        e.preventDefault();
+                        if (e.altKey) { // Ctrl+Alt+цифра или Ctrl+Alt+*
+                            if (isDigit) {
+                                if (e.key === '0') return; // Не обрабатываем Ctrl+Alt+0
+                                this.navigateToTag(e.key, true); // Выделение
+                            } else { // isStar
+                                TextEditor.currentAction = 'select';
+                                DOMUtils.createTagInputPopup((name) => {
+                                    this.navigateToNamedTag(name, true);
+                                });
+                            }
+                        } else { // Ctrl+цифра или Ctrl+*
+                            if (isDigit) {
+                                if (e.key === '0') {
+                                    this.removeAllMarkers();
+                                    return;
+                                }
+                                this.navigateToTag(e.key, false); // Переход
+                            } else { // isStar
+                                TextEditor.currentAction = 'move';
+                                DOMUtils.createTagInputPopup((name) => {
+                                    this.navigateToNamedTag(name, false);
+                                });
+                            }
+                        }
+                        return;
+                    }
+                }
+                if (e.ctrlKey && (e.key === 'z' || e.key === 'я')) {
+                    e.preventDefault();
+                    if (e.shiftKey) this.redo(); else this.undo();
+                    return;
+                }
+                if (e.ctrlKey && (e.key === 'y' || e.key === 'н')) {
+                    e.preventDefault();
+                    this.redo();
+                    return;
+                }
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    this.insertText('\t');
+                    return;
+                }
+                if (e.altKey && (e.key === 'x' || e.key === 'ч')) {
+                    e.preventDefault();
+                    this.findAndSelectNext('*', 'star');
+                    return;
+                }
+                // Pause/Break - изменение раскладки выделенного текста
+                if (e.key === 'Pause') {
+                    e.preventDefault();
+                    this.toggleCyrillicSelection();
+                    return;
+                }
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    if (!this.isUndoRedoOperation) this.saveHistoryState();
+                }
+            }
+            handleInput(e) {
+                if (this.isUndoRedoOperation) return;
+                const text = e.data || '';
+                if (text) {
+                    this.inputBuffer = this.autoReplacer.updateBuffer(this.inputBuffer, text);
+                    if (!this.autoReplacer.checkAndReplace(this.inputBuffer, this.editor, (word, replacement) => {
+                        this.performAutoReplace(word, replacement);
+                    })) {
+                        setTimeout(() => this.saveHistoryState(), 0);
+                    }
+                } else {
+                    setTimeout(() => this.saveHistoryState(), 0);
+                }
+            }
+            handlePaste() {
+                if (!this.isUndoRedoOperation) setTimeout(() => this.saveHistoryState(), 0);
+            }
+            // Выполнение автозамены в textarea
+            performAutoReplace(word, replacement) {
+                this.saveHistoryState(); // <-- Сохраняем состояние ДО замены
+                const startPos = this.editor.selectionStart;
+                const endPos = this.editor.selectionEnd;
+                // Находим начало слова для замены (предполагаем, что оно в конце ввода)
+                const startOfWord = Math.max(0, startPos - word.length);
+                const textBefore = this.editor.value.substring(0, startOfWord);
+                const textAfter = this.editor.value.substring(endPos);
+                const cursorMarkPos = replacement.indexOf('[курсор]');
+                let cleanReplacement = replacement;
+                let newCursorPos = startOfWord + replacement.length;
+                if (cursorMarkPos !== -1) {
+                    cleanReplacement = replacement.replace('[курсор]', '');
+                    newCursorPos = startOfWord + cursorMarkPos; // Позиция курсора после вставки
+                }
+                // Обновляем значение textarea
+                this.editor.value = textBefore + cleanReplacement + textAfter;
+                // Устанавливаем позицию курсора
+                this.editor.setSelectionRange(newCursorPos, newCursorPos);
+                this.inputBuffer = "";
+            }
+            insertText(text) {
+                if (!this.isUndoRedoOperation) this.saveHistoryState();
+                const startPos = this.getCursorPosition();
+                const before = this.editor.value.substring(0, startPos);
+                const after = this.editor.value.substring(startPos);
+                this.editor.value = before + text + after;
+                this.setCursorPosition(startPos + text.length);
+                this.inputBuffer = this.autoReplacer.updateBuffer(this.inputBuffer, text);
+            }
+            findAndSelectNext(char, searchKey) {
+                const content = this.editor.value;
+                const cursorPos = this.getCursorPosition();
+                let nextPos = content.indexOf(char, cursorPos + 1);
+                if (nextPos === -1) nextPos = content.indexOf(char, 0);
+                if (nextPos !== -1) {
+                    this.selectText(nextPos, nextPos + 1);
+                    this.lastSearchPositions[searchKey] = nextPos;
+                }
+            }
+            // НОВЫЙ МЕТОД: переход к цифровому маркеру
+            navigateToTag(tag, shouldSelect = false) {
+                const positions = this.findTagPairPositions(tag);
+                if (positions) {
+                    const { openingEnd, closingStart } = positions;
+                    if (shouldSelect) {
+                        this.selectText(openingEnd, closingStart);
+                    } else {
+                        this.setCursorPosition(closingStart);
+                    }
+                } else {
+                    console.log(`Пара маркеров [${tag}> и <${tag}] не найдена`);
+                }
+            }
+            // НОВЫЙ МЕТОД: переход к именованному маркеру
+            navigateToNamedTag(tagName, shouldSelect = false) {
+                const positions = this.findTagPairPositions(tagName);
+                if (positions) {
+                    const { openingEnd, closingStart } = positions;
+                    if (shouldSelect) {
+                        this.selectText(openingEnd, closingStart);
+                    } else {
+                        this.setCursorPosition(closingStart);
+                    }
+                } else {
+                    console.log(`Пара маркеров [${tagName}> и <${tagName}] не найдена`);
+                }
+            }
+            // УЛУЧШЕННЫЙ МЕТОД: поиск позиций пары маркеров [tagName> и <tagName]
+            // Ищет следующую пару *от текущей позиции курсора*.
+            // Если курсор между парой, ищет следующую. Если курсор после последней пары, возвращается к первой.
+            findTagPairPositions(tagName) {
+                // Проверим, содержит ли имя пробелы (это уже не должно происходить, но на всякий случай)
+                if (tagName.includes(' ')) {
+                    console.log('Имя маркера содержит пробелы, поиск пары отменён');
+                    return null;
+                }
+                const content = this.editor.value;
+                const cursorPos = this.getCursorPosition();
+                // Экранируем имя маркера для безопасного использования в регулярном выражении
+                const escapedTagName = this.escapeRegExp(tagName);
+                // Регулярные выражения для открывающего и закрывающего маркеров
+                const openingRegex = new RegExp(`\\[${escapedTagName}>`, 'g');
+                const closingRegex = new RegExp(`<${escapedTagName}\\]`, 'g');
+                // Найдём все позиции открывающих и закрывающих маркеров
+                let openingMatches = [];
+                let closingMatches = [];
+                let match;
+                // Сбросим lastIndex перед каждым поиском
+                openingRegex.lastIndex = 0;
+                while ((match = openingRegex.exec(content)) !== null) {
+                    openingMatches.push({ start: match.index, end: match.index + match[0].length });
+                }
+                closingRegex.lastIndex = 0;
+                while ((match = closingRegex.exec(content)) !== null) {
+                    closingMatches.push({ start: match.index, end: match.index + match[0].length });
+                }
+                // Сопоставим пары: для каждого открывающего ищем ближайший закрывающий *после* него
+                let pairs = [];
+                let closingIndex = 0;
+                for (let opening of openingMatches) {
+                    while (closingIndex < closingMatches.length && closingMatches[closingIndex].start < opening.end) {
+                        closingIndex++;
+                    }
+                    if (closingIndex < closingMatches.length) {
+                        // Нашли пару
+                        pairs.push({
+                            openingStart: opening.start,
+                            openingEnd: opening.end,
+                            closingStart: closingMatches[closingIndex].start,
+                            closingEnd: closingMatches[closingIndex].end
+                        });
+                        closingIndex++; // Переходим к следующему потенциальному закрывающему
+                    }
+                }
+                // Сортируем пары по позиции открывающего маркера
+                pairs.sort((a, b) => a.openingStart - b.openingStart);
+                if (pairs.length === 0) {
+                    return null; // Пары не найдены
+                }
+                // Найдём пару, в которой находится курсор, или следующую за ней
+                let foundPair = null;
+                for (let pair of pairs) {
+                    if (cursorPos >= pair.openingEnd && cursorPos <= pair.closingStart) {
+                        // Курсор между парой, ищем следующую
+                        // Найдём индекс текущей пары
+                        const currentIndex = pairs.indexOf(pair);
+                        const nextIndex = (currentIndex + 1) % pairs.length; // Циклически к следующей
+                        foundPair = pairs[nextIndex];
+                        break;
+                    } else if (cursorPos < pair.openingStart) {
+                        // Курсор до этой пары, это потенциальная следующая пара
+                        foundPair = pair;
+                        break;
+                    }
+                }
+                // Если курсор был после всех пар или не нашли подходящую внутри/до
+                if (!foundPair && pairs.length > 0) {
+                    // Если курсор был после последней пары, возвращаем первую
+                    // или если не нашли ничего подходящего, возвращаем первую
+                    const lastPair = pairs[pairs.length - 1];
+                    if (cursorPos > lastPair.closingEnd) {
+                         foundPair = pairs[0]; // Циклически к первой
+                    }
+                }
+                return foundPair;
+            }
+            // НОВЫЙ МЕТОД: извлечение текста между маркерами [tagName> и <tagName]
+            extractTextBetweenMarkers(tagName) {
+                // Проверим, содержит ли имя пробелы
+                if (tagName.includes(' ')) {
+                    console.log('Имя маркера содержит пробелы, извлечение отменено');
+                    return null;
+                }
+                const content = this.editor.value;
+                const escapedTagName = this.escapeRegExp(tagName);
+                // Регулярные выражения для открывающего и закрывающего маркеров
+                const openingRegex = new RegExp(`\\[${escapedTagName}>`, 'g');
+                const closingRegex = new RegExp(`<${escapedTagName}\\]`, 'g');
+                // Найдём все позиции открывающих и закрывающих маркеров
+                let openingMatches = [];
+                let closingMatches = [];
+                let match;
+                openingRegex.lastIndex = 0;
+                while ((match = openingRegex.exec(content)) !== null) {
+                    openingMatches.push({ start: match.index, end: match.index + match[0].length });
+                }
+                closingRegex.lastIndex = 0;
+                while ((match = closingRegex.exec(content)) !== null) {
+                    closingMatches.push({ start: match.index, end: match.index + match[0].length });
+                }
+                // Сопоставим пары: для каждого открывающего ищем ближайший закрывающий *после* него
+                let pairs = [];
+                let closingIndex = 0;
+                for (let opening of openingMatches) {
+                    while (closingIndex < closingMatches.length && closingMatches[closingIndex].start < opening.end) {
+                        closingIndex++;
+                    }
+                    if (closingIndex < closingMatches.length) {
+                        pairs.push({
+                            openingEnd: opening.end,
+                            closingStart: closingMatches[closingIndex].start
+                        });
+                        closingIndex++; // Переходим к следующему потенциальному закрывающему
+                    }
+                }
+                // Берём первую найденную пару (или null, если нет)
+                if (pairs.length > 0) {
+                    const pair = pairs[0]; // Берём первую пару
+                    return content.substring(pair.openingEnd, pair.closingStart);
+                }
+                return null; // Пары не найдены
+            }
+            // НОВЫЙ МЕТОД: обработка подстановки текста в имя файла по тегу [[имя]]
+            processFilenameTemplate(filename) {
+                // Регулярное выражение для поиска тега [[имя]]
+                const tagRegex = /\[\[([^\[\]]+)\]\]/g;
+                let processedFilename = filename;
+                let match;
+                // Ищем все теги в имени файла
+                while ((match = tagRegex.exec(filename)) !== null) {
+                    const fullTag = match[0];
+                    const tagName = match[1]; // Имя маркера из тега
+                    // Извлекаем текст между маркерами в редакторе
+                    const extractedText = this.extractTextBetweenMarkers(tagName);
+                    if (extractedText !== null) {
+                        // Заменяем тег на извлечённый текст
+                        processedFilename = processedFilename.replace(fullTag, extractedText);
+                        // Обновляем регулярное выражение, чтобы продолжить поиск с начала строки
+                        // Это может быть неэффективно при большом количестве тегов, но работает для простых случаев
+                        tagRegex.lastIndex = 0;
+                        filename = processedFilename; // Обновляем строку для следующей итерации
+                    } else {
+                        // Если маркеры не найдены, можно оставить тег как есть или обработать иначе
+                        // В ТЗ не указано поведение при отсутствии маркеров, оставим как есть
+                        console.log(`Тег [[${tagName}]] найден в имени файла, но маркеры [${tagName}> и <${tagName}] не найдены в тексте редактора.`);
+                        // Или, например, заменить на пустую строку или на "N/A"?
+                        // processedFilename = processedFilename.replace(fullTag, ''); // Пример замены на пусто
+                        // Или: processedFilename = processedFilename.replace(fullTag, 'N/A');
+                        // Пока оставим как есть, как наиболее нейтральный вариант.
+                        tagRegex.lastIndex = 0; // Продолжаем поиск
+                    }
+                }
+                return processedFilename;
+            }
+            // НОВЫЙ МЕТОД: удаление всех маркеров
+            removeAllMarkers() {
+                this.saveHistoryState(); // <-- Сохраняем состояние ДО удаления
+                const content = this.editor.value;
+                const markerRegex = /\[[^<>\[\]\s]+>|<[^<>\[\]\s]+\]/g; // <-- Исправленное выражение
+                const newContent = content.replace(markerRegex, '');
+                this.editor.value = newContent;
+                // Не вызываем saveHistoryState() второй раз
+            }
+            // НОВЫЙ МЕТОД: смена раскладки выделенного текста
+            toggleCyrillicSelection() {
+                const start = this.editor.selectionStart;
+                const end = this.editor.selectionEnd;
+                if (start === end) return; // Нет выделения
+                this.saveHistoryState(); // <-- Сохраняем состояние ДО замены
+                const selectedText = this.editor.value.substring(start, end);
+                const toggledText = this.swapLayout(selectedText);
+                const before = this.editor.value.substring(0, start);
+                const after = this.editor.value.substring(end);
+                this.editor.value = before + toggledText + after;
+                this.editor.setSelectionRange(start, start + toggledText.length);
+                // Не вызываем saveHistoryState() второй раз
+            }
+            // Вспомогательный метод: смена раскладки (en ↔ ru)
+            swapLayout(text) {
+                const enToRu = {
+                    'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
+                    'a': 'ф', 's': 'ы', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'э',
+                    'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю', '/': '.',
+                    'Q': 'Й', 'W': 'Ц', 'E': 'У', 'R': 'К', 'T': 'Е', 'Y': 'Н', 'U': 'Г', 'I': 'Ш', 'O': 'Щ', 'P': 'З', '{': 'Х', '}': 'Ъ',
+                    'A': 'Ф', 'S': 'Ы', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р', 'J': 'О', 'K': 'Л', 'L': 'Д', ':': 'Ж', '"': 'Э',
+                    'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И', 'N': 'Т', 'M': 'Ь', '<': 'Б', '>': 'Ю', '?': ','
+                };
+                const ruToEn = {};
+                for (const [en, ru] of Object.entries(enToRu)) {
+                    ruToEn[ru] = en;
+                }
+                let result = '';
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    if (enToRu[char] !== undefined) {
+                        result += enToRu[char];
+                    } else if (ruToEn[char] !== undefined) {
+                        result += ruToEn[char];
+                    } else {
+                        result += char;
+                    }
+                }
+                return result;
+            }
+            // Вспомогательный метод: экранирование специальных символов для RegExp
+            escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+        }
+        class DictionaryManager {
+            constructor() {
+                this.dictionaries = this.loadDictionaries();
+                this.activeDictionaries = this.loadActiveDictionaries();
+                this.combinedActiveDictionary = {};
+                this.conflictingShortcuts = new Set(); // Множество конфликтующих сокращений
+                this.conflictDetails = {}; // Объект { 'сокращение': ['имя_словаря1', 'имя_словаря2'] }
+                this.selectedShortcut = null;
+                this.selectedDictionaryName = null;
+                this.setupEventListeners();
+                this.rebuildActiveDictionary();
+                this.checkConflicts();
+                this.renderShortcutsTable();
+                this.renderDictionariesList();
+                this.updateConflictStatus();
+                this.setupDropZone();
+                this.clearEditFields();
+                // Инициализация имени активного словаря
+                this.updateCurrentDictNameDisplay(); // Вызываем для обновления заголовка
+            }
+            loadDictionaries() {
+                const saved = localStorage.getItem('textEditorDictionaries');
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        console.error('Ошибка при загрузке словарей:', e);
+                    }
+                }
+                const initialDict = this.loadInitialDictionary();
+                return { 'default': initialDict };
+            }
+            loadInitialDictionary() {
+                 const saved = localStorage.getItem('textEditorDictionary');
+                 if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        console.error('Ошибка при загрузке старого словаря:', e);
+                    }
+                 }
+                 return {
+                    "test": "[курсор]тестовый текст",
+                    "hello": "[курсор]привет",
+                    "date": "[курсор]" + new Date().toLocaleDateString(),
+                    "time": "[курсор]" + new Date().toLocaleTimeString(),
+                    "tab": "[курсор]\t"
+                };
+            }
+            loadActiveDictionaries() {
+                const saved = localStorage.getItem('textEditorActiveDictionaries');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        const activeSet = new Set();
+                        for (let [key, value] of Object.entries(parsed)) {
+                            if (value) activeSet.add(key);
+                        }
+                        return activeSet;
+                    } catch (e) {
+                        console.error('Ошибка при загрузке активных словарей:', e);
+                    }
+                }
+                const active = new Set();
+                if (this.dictionaries && this.dictionaries['default']) {
+                    active.add('default');
+                }
+                return active;
+            }
+            saveDictionaries() {
+                localStorage.setItem('textEditorDictionaries', JSON.stringify(this.dictionaries));
+            }
+            saveActiveDictionaries() {
+                const activeObj = {};
+                for (let name in this.dictionaries) {
+                     activeObj[name] = this.activeDictionaries.has(name);
+                }
+                localStorage.setItem('textEditorActiveDictionaries', JSON.stringify(activeObj));
+            }
+            getActiveDictionary() {
+                return this.combinedActiveDictionary;
+            }
+            loadDictionaryFromFile(file, fileName) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const newDict = JSON.parse(e.target.result);
+                        if (typeof newDict === 'object' && newDict !== null) {
+                            this.dictionaries[fileName] = newDict;
+                            if (Object.keys(this.dictionaries).length === 1) {
+                                this.activeDictionaries.add(fileName);
+                            }
+                            this.saveDictionaries();
+                            this.saveActiveDictionaries();
+                            this.rebuildActiveDictionary();
+                            this.checkConflicts();
+                            this.renderShortcutsTable();
+                            this.renderDictionariesList();
+                            this.updateConflictStatus();
+                            this.updateCurrentDictNameDisplay(); // Обновить имя при изменении списка
+                            this.clearEditFields();
+                        } else {
+                            alert('Ошибка: файл не содержит корректный JSON-объект словаря.');
+                        }
+                    } catch (error) {
+                        alert('Ошибка при чтении файла: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            removeDictionary(dictName) {
+                if (confirm(`Удалить словарь "${dictName}"?`)) {
+                    delete this.dictionaries[dictName];
+                    this.activeDictionaries.delete(dictName);
+                    if (this.selectedDictionaryName === dictName) {
+                        this.selectedDictionaryName = null;
+                    }
+                    this.saveDictionaries();
+                    this.saveActiveDictionaries();
+                    this.rebuildActiveDictionary();
+                    this.checkConflicts();
+                    this.renderShortcutsTable();
+                    this.renderDictionariesList();
+                    this.updateConflictStatus();
+                    this.updateCurrentDictNameDisplay(); // Обновить имя при изменении списка
+                    this.clearEditFields();
+                }
+            }
+            toggleDictionary(dictName) {
+                if (this.activeDictionaries.has(dictName)) {
+                    this.activeDictionaries.delete(dictName);
+                } else {
+                    this.activeDictionaries.add(dictName);
+                }
+                this.saveActiveDictionaries();
+                this.rebuildActiveDictionary();
+                this.checkConflicts();
+                this.renderShortcutsTable();
+                this.renderDictionariesList();
+                this.updateConflictStatus();
+                this.clearEditFields();
+            }
+            exportDictionary(dictName) {
+                if (this.dictionaries[dictName]) {
+                    const json = JSON.stringify(this.dictionaries[dictName], null, 2);
+                    const blob = new Blob([json], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = dictName + '.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            }
+            // ОБНОВЛЁННЫЙ МЕТОД: rebuildActiveDictionary
+            rebuildActiveDictionary() {
+                this.combinedActiveDictionary = {};
+                // Сначала формируем объединённый словарь
+                for (let name of this.activeDictionaries) {
+                    const dict = this.dictionaries[name];
+                    if (dict) {
+                        Object.assign(this.combinedActiveDictionary, dict);
+                    }
+                }
+                // Затем исключаем конфликтующие сокращения
+                for (let conflict of this.conflictingShortcuts) {
+                    delete this.combinedActiveDictionary[conflict];
+                }
+            }
+            // ОБНОВЛЁННЫЙ МЕТОД: checkConflicts
+            checkConflicts() {
+                this.conflictingShortcuts.clear();
+                this.conflictDetails = {}; // Очищаем детали конфликта
+                const shortcutSources = {};
+                for (let name of this.activeDictionaries) {
+                    const dict = this.dictionaries[name];
+                    if (dict) {
+                        for (let shortcut in dict) {
+                            if (!shortcutSources[shortcut]) {
+                                shortcutSources[shortcut] = [];
+                            }
+                            shortcutSources[shortcut].push(name);
+                        }
+                    }
+                }
+                for (let shortcut in shortcutSources) {
+                    if (shortcutSources[shortcut].length > 1) {
+                        this.conflictingShortcuts.add(shortcut);
+                        this.conflictDetails[shortcut] = shortcutSources[shortcut];
+                    }
+                }
+            }
+            // ОБНОВЛЁННЫЙ МЕТОД: updateConflictStatus
+            updateConflictStatus() {
+                const statusElement = document.getElementById('conflict-status');
+                if (this.conflictingShortcuts.size > 0) {
+                    const conflictMessages = [];
+                    for (let shortcut in this.conflictDetails) {
+                        const sources = this.conflictDetails[shortcut];
+                        if (sources.length > 1) {
+                            conflictMessages.push(`Конфликт: '${shortcut}' в '${sources[0]}' и '${sources[1]}'`);
+                            // Если больше двух словарей, можно добавить "и др."
+                            if (sources.length > 2) {
+                                conflictMessages[conflictMessages.length - 1] += ` и ещё ${sources.length - 2}`;
+                            }
+                        }
+                    }
+                    statusElement.textContent = conflictMessages.join('; ');
+                    statusElement.style.display = 'block';
+                } else {
+                    statusElement.style.display = 'none';
+                }
+            }
+            renderDictionariesList() {
+                const tbody = document.getElementById('dictionaries-table-body');
+                tbody.innerHTML = '';
+                for (let name in this.dictionaries) {
+                    const row = document.createElement('tr');
+                    row.dataset.dictName = name;
+                    if (this.selectedDictionaryName === name) {
+                        row.classList.add('selected');
+                    }
+                    const toggleCell = document.createElement('td');
+                    const nameCell = document.createElement('td');
+                    const actionsCell = document.createElement('td');
+                    const toggleCheckbox = document.createElement('input');
+                    toggleCheckbox.type = 'checkbox';
+                    toggleCheckbox.checked = this.activeDictionaries.has(name);
+                    toggleCheckbox.dataset.dictName = name;
+                    toggleCheckbox.addEventListener('change', (e) => {
+                        this.toggleDictionary(e.target.dataset.dictName);
+                    });
+                    toggleCell.appendChild(toggleCheckbox);
+                    nameCell.textContent = name;
+                    actionsCell.innerHTML = `
+                        <button class="export-dict-btn" data-dict-name="${name}">Экспорт</button>
+                        <button class="delete-dict-btn" data-dict-name="${name}">Удалить</button>
+                    `;
+                    row.appendChild(toggleCell);
+                    row.appendChild(nameCell);
+                    row.appendChild(actionsCell);
+                    tbody.appendChild(row);
+                }
+            }
+            // ОБНОВЛЁННЫЙ МЕТОД: renderShortcutsTable
+            renderShortcutsTable() {
+                const tbody = document.getElementById('shortcuts-table-body');
+                tbody.innerHTML = '';
+                let dictToRender = this.combinedActiveDictionary;
+                if (this.selectedDictionaryName && this.dictionaries[this.selectedDictionaryName]) {
+                    dictToRender = this.dictionaries[this.selectedDictionaryName];
+                }
+                for (let shortcut in dictToRender) {
+                    const row = document.createElement('tr');
+                    row.dataset.shortcut = shortcut;
+                    if (this.selectedShortcut === shortcut) {
+                        row.classList.add('selected');
+                    }
+                    // Проверяем, нужно ли подсвечивать конфликтующую строку
+                    // Условие: отображаем конкретный словарь, он активен, и сокращение конфликтует
+                    if (this.selectedDictionaryName &&
+                        this.activeDictionaries.has(this.selectedDictionaryName) &&
+                        this.conflictingShortcuts.has(shortcut)) {
+                        row.classList.add('conflicting-shortcut-row');
+                    }
+                    const shortcutCell = document.createElement('td');
+                    shortcutCell.textContent = shortcut;
+                    // УБРАНО: старое условие подсветки ячейки
+                    const replacementCell = document.createElement('td');
+                    const preview = dictToRender[shortcut].substring(0, 50);
+                    replacementCell.textContent = preview + (dictToRender[shortcut].length > 50 ? '...' : '');
+                    row.appendChild(shortcutCell);
+                    row.appendChild(replacementCell);
+                    tbody.appendChild(row);
+                }
+            }
+            addOrUpdateShortcut(shortcut, replacement) {
+                if (!shortcut || !shortcut.trim()) {
+                    DOMUtils.showError(document.getElementById('shortcut-error'), 'Сокращение не может быть пустым');
+                    return false;
+                }
+                shortcut = shortcut.trim();
+                replacement = replacement || '';
+                // Ищем, где уже существует сокращение
+                let foundInDict = null;
+                for (let name in this.dictionaries) {
+                    if (this.dictionaries[name][shortcut] !== undefined) {
+                         foundInDict = name;
+                         break;
+                    }
+                }
+                if (foundInDict) {
+                    const userConfirmed = confirm(`Сокращение "${shortcut}" существует. Заменить?`);
+                    if (!userConfirmed) {
+                        DOMUtils.clearError(document.getElementById('shortcut-error'));
+                        return false;
+                    }
+                    this.dictionaries[foundInDict][shortcut] = replacement;
+                } else {
+                    // Если сокращения нет, добавляем в выбранный словарь или первый активный
+                    const targetDictName = this.selectedDictionaryName || this.activeDictionaries.values().next().value || 'default';
+                    if (!this.dictionaries[targetDictName]) {
+                         this.dictionaries[targetDictName] = {};
+                    }
+                    this.dictionaries[targetDictName][shortcut] = replacement;
+                }
+                this.saveDictionaries();
+                this.rebuildActiveDictionary();
+                this.checkConflicts();
+                this.renderShortcutsTable();
+                this.selectShortcut(shortcut); // Обновляем выделение и поля редактирования
+                this.renderDictionariesList();
+                this.updateConflictStatus();
+                DOMUtils.clearError(document.getElementById('shortcut-error'));
+                return true;
+            }
+            deleteShortcut(shortcut) {
+                if (shortcut) {
+                    // Ищем, в каком словаре находится сокращение
+                    let foundInDict = null;
+                    for (let name in this.dictionaries) {
+                        if (this.dictionaries[name][shortcut] !== undefined) {
+                            foundInDict = name;
+                            break;
+                        }
+                    }
+                    if (foundInDict) {
+                         if (confirm(`Удалить сокращение "${shortcut}" из словаря "${foundInDict}"?`)) {
+                            delete this.dictionaries[foundInDict][shortcut];
+                            this.saveDictionaries();
+                            this.rebuildActiveDictionary();
+                            this.checkConflicts();
+                            this.renderShortcutsTable();
+                            this.selectedShortcut = null;
+                            this.clearEditFields();
+                            this.renderDictionariesList();
+                            this.updateConflictStatus();
+                            return true;
+                         }
+                    }
+                }
+                return false;
+            }
+            exportDictionary() {
+                // Экспортируем объединённый активный словарь (фильтрованный)
+                const json = JSON.stringify(this.combinedActiveDictionary, null, 2);
+                const blob = new Blob([json], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'active-dictionary.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            setupEventListeners() {
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const tabId = e.target.getAttribute('data-tab');
+                        this.switchTab(tabId);
+                    });
+                });
+                document.getElementById('shortcuts-table-body').addEventListener('click', (e) => {
+                    const row = e.target.closest('tr');
+                    if (row && row.dataset.shortcut) {
+                        this.selectShortcut(row.dataset.shortcut);
+                    }
+                });
+                document.getElementById('dictionaries-table-body').addEventListener('click', (e) => {
+                    const row = e.target.closest('tr');
+                    if (row && row.dataset.dictName) {
+                        this.selectedShortcut = null;
+                        document.querySelectorAll('#dictionaries-table-body tr').forEach(r => r.classList.remove('selected'));
+                        row.classList.add('selected');
+                        this.selectedDictionaryName = row.dataset.dictName;
+                        this.clearEditFields();
+                        this.renderShortcutsTable();
+                        this.updateCurrentDictNameDisplay(); // Обновить имя при выборе словаря
+                    }
+                });
+                document.getElementById('save-shortcut-btn').addEventListener('click', () => {
+                    const shortcut = document.getElementById('edit-shortcut').value;
+                    const replacement = document.getElementById('edit-replacement').value;
+                    this.addOrUpdateShortcut(shortcut, replacement);
+                });
+                document.getElementById('delete-shortcut-btn').addEventListener('click', () => {
+                    const shortcut = document.getElementById('edit-shortcut').value;
+                    if (shortcut) {
+                        this.deleteShortcut(shortcut);
+                    }
+                });
+                // УБРАНА кнопка "Сохранить активный словарь"
+                document.getElementById('dictionaries-table-body').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('export-dict-btn')) {
+                        const dictName = e.target.dataset.dictName;
+                        this.exportDictionary(dictName);
+                    }
+                    if (e.target.classList.contains('delete-dict-btn')) {
+                        const dictName = e.target.dataset.dictName;
+                        this.removeDictionary(dictName);
+                    }
+                });
+            }
+            setupDropZone() {
+                const dropZone = document.getElementById('drop-zone');
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.add('dragover');
+                    }, false);
+                });
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.remove('dragover');
+                    }, false);
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files.length) {
+                        const file = files[0];
+                        let fileName = file.name;
+                        if (fileName.endsWith('.txt')) {
+                            fileName = fileName.substring(0, fileName.length - 4);
+                        }
+                        if (this.dictionaries[fileName]) {
+                            if (!confirm(`Словарь "${fileName}" уже существует. Загрузить и заменить?`)) {
+                                return;
+                            }
+                        }
+                        this.loadDictionaryFromFile(file, fileName);
+                    }
+                });
+            }
+            switchTab(tabId) {
+                document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            }
+            // ОБНОВЛЁННЫЙ МЕТОД: selectShortcut
+            selectShortcut(shortcut) {
+                this.selectedShortcut = shortcut;
+                document.querySelectorAll('#shortcuts-table-body tr').forEach(row => row.classList.remove('selected'));
+                const row = document.querySelector(`#shortcuts-table-body tr[data-shortcut="${shortcut}"]`);
+                if (row) row.classList.add('selected');
+                document.getElementById('edit-shortcut').value = shortcut;
+                // Используем словарь, отображаемый в таблице (selectedDictionaryName) или combinedActiveDictionary
+                let dictToUse = this.combinedActiveDictionary;
+                if (this.selectedDictionaryName && this.dictionaries[this.selectedDictionaryName]) {
+                    dictToUse = this.dictionaries[this.selectedDictionaryName];
+                }
+                // Извлекаем подстановку из нужного словаря
+                document.getElementById('edit-replacement').value = dictToUse[shortcut] || '';
+                this.updateButtonsState();
+                DOMUtils.clearError(document.getElementById('shortcut-error'));
+            }
+            clearEditFields() {
+                document.getElementById('edit-shortcut').value = '';
+                document.getElementById('edit-replacement').value = '';
+                this.updateButtonsState();
+                DOMUtils.clearError(document.getElementById('shortcut-error'));
+            }
+            updateButtonsState() {
+                const deleteBtn = document.getElementById('delete-shortcut-btn');
+                const shortcut = document.getElementById('edit-shortcut').value;
+                // Кнопка удаления активна, если сокращение существует в каком-либо словаре
+                let exists = false;
+                for (let name in this.dictionaries) {
+                    if (this.dictionaries[name][shortcut] !== undefined) {
+                        exists = true;
+                        break;
+                    }
+                }
+                deleteBtn.disabled = !exists;
+            }
+            // НОВЫЙ МЕТОД: обновление отображения имени активного словаря
+            updateCurrentDictNameDisplay() {
+                // const displayElement = document.getElementById('current-dict-name');
+                const titleElement = document.getElementById('editing-dict-title');
+                if (this.selectedDictionaryName) {
+                    titleElement.textContent = `Редактирование словаря "${this.selectedDictionaryName}"`;
+                } else {
+                    titleElement.textContent = 'Редактирование словаря';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const dictionaryManager = new DictionaryManager();
+            const editorElement = document.getElementById('editor');
+            const editor = new TextEditor(editorElement, dictionaryManager);
+            editorElement.focus();
+        });
+    </script>
+</body>
+</html>
