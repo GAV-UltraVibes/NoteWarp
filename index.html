@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NoteWarp - Упрощённый редактор</title>
+    <title>NoteWarp - редактор с автозаменами</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,19 +14,25 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .app-title {
-            font-family: 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif;
-            font-weight: normal;
-            font-size: 2.8em;
-            background: linear-gradient(45deg, #007cba, #00cc66);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 10px 0;
-            letter-spacing: -0.5px;
-        }
+		.app-title {
+			font-family: 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif;
+			font-weight: normal;
+			font-size: 2.8em;
+			background: linear-gradient(45deg, #007cba, #00cc66);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			margin: 10px 0;
+			letter-spacing: -0.5px;
+			text-align: center;
+		}
         .tabs {
             margin-bottom: 20px;
+            display: flex; /* Для выравнивания кнопок */
+            justify-content: space-between; /* Распределение пространства */
+        }
+        .tab-buttons-container {
+            display: flex; /* Для размещения кнопок Редактор и Словарь */
         }
         .tab-button {
             padding: 10px 20px;
@@ -38,6 +44,17 @@
         .tab-button.active {
             background-color: #007cba;
             color: white;
+        }
+        .help-button {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            margin-left: 5px; /* Отступ слева от других кнопок */
+        }
+        .help-button:hover {
+            background-color: #5a6268;
         }
         #editor-tab, #dictionary-tab {
             display: none;
@@ -116,7 +133,7 @@
             padding: 10px;
             box-sizing: border-box;
         }
-        /* НОВЫЕ СТИЛИ ДЛЯ ВИЗУАЛЬНОГО ВЫДЕЛЕНИЯ БЛОКОВ */
+        /* СТИЛИ ДЛЯ ВИЗУАЛЬНОГО ВЫДЕЛЕНИЯ БЛОКОВ */
         .dictionary-panel {
             margin-bottom: 15px;
             padding: 10px;
@@ -344,7 +361,9 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            width: 300px;
+            width: 600px; 
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .popup-content input {
             width: 100%;
@@ -357,21 +376,44 @@
             padding: 8px 15px;
             margin-right: 10px;
         }
-        /* НОВЫЙ CSS-КЛАСС для визуального выделения конфликтующих строк */
         .conflicting-shortcut-row {
             color: #dc3545; /* Красный цвет текста */
             font-weight: bold;
             background-color: #ffeef0; /* Светло-розовый фон */
         }
+        /* Стили для содержимого справки */
+        .help-content h3 {
+            color: #007cba;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .help-content p, .help-content ul {
+            margin: 8px 0;
+        }
+        .help-content ul {
+            padding-left: 20px;
+        }
+        .help-content li {
+            margin-bottom: 5px;
+        }
+        .help-content code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
-    <div class="app-header">
-        <div class="app-title">NoteWarp</div>
-    </div>
+	<div class="app-header">
+		<div class="app-title" id="animated-title">NoteWarp</div>
+	</div>
     <div class="tabs">
-        <button class="tab-button active" data-tab="editor-tab">Редактор</button>
-        <button class="tab-button" data-tab="dictionary-tab">Словарь</button>
+        <div class="tab-buttons-container">
+            <button class="tab-button active" data-tab="editor-tab">Редактор</button>
+            <button class="tab-button" data-tab="dictionary-tab">Словарь</button>
+        </div>
+        <button class="help-button" id="help-button">[?]</button>
     </div>
     <div id="editor-tab" class="active">
         <div style="margin-bottom: 10px;">
@@ -415,9 +457,8 @@
                 </div>
                 <!-- Блок "Редактирование словаря" -->
                 <div class="editing-dict-panel">
-                    <h3 id="editing-dict-title">Редактирование словаря</h3> <!-- Изменено: id для заголовка -->
+                    <h3 id="editing-dict-title">Редактирование словаря</h3> 
                     <div class="shortcut-table-container">
-                        <!-- УДАЛЕНО: div.current-dict-name -->
                         <table class="shortcut-table">
                             <thead>
                                 <tr>
@@ -452,6 +493,71 @@
         </div>
     </div>
     <script>
+/*
+ * NoteWarp - Simplified text editor with autoreplace
+ * Author: Александр Гаркавцев
+ * Co-author: Qwen3 (Alibaba Cloud)
+ * License: MIT
+ *
+ * Description:
+ * This application provides a simple web interface for text editing
+ * with dictionary-based autoreplace, marker navigation,
+ * undo/redo functionality, word wrapping, and other helper features.
+ *
+ * MIT License:
+ * Copyright (c) 2024 Александр Гаркавцев, Qwen3 (Alibaba Cloud)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+		document.addEventListener('DOMContentLoaded', () => {
+			const titleElement = document.getElementById('animated-title');
+			const sequence = ['|','n|', 'nw|', 'NW', 'NoWa', 'NotWar', 'NoteWarp'];
+			let isAnimating = false;
+
+			titleElement.addEventListener('click', () => {
+				if (isAnimating) return;
+				isAnimating = true;
+				let index = 0;
+
+				const interval = setInterval(() => {
+					if (index < sequence.length) {
+						titleElement.textContent = sequence[index];
+						if (index === 3) { // после "NW"
+							clearInterval(interval);
+							const newInterval = setInterval(() => {
+								index++;
+								if (index < sequence.length) {
+									titleElement.textContent = sequence[index];
+								} else {
+									clearInterval(newInterval);
+									isAnimating = false;
+								}
+							}, 50); // Новая задержка
+						}
+						index++;
+					} else {
+						clearInterval(interval);
+						isAnimating = false;
+					}
+				}, 200); // Начальная задержка
+			});
+		});
         // Утилиты
         class DOMUtils {
             static showError(element, message) {
@@ -461,7 +567,7 @@
             static clearError(element) {
                 element.style.display = 'none';
             }
-            // Новый метод для всплывающего окна ввода имени маркера
+            // Метод для создания всплывающего окна ввода имени маркера
             static createTagInputPopup(callback) {
                 const overlay = document.createElement('div');
                 overlay.className = 'popup-overlay';
@@ -514,6 +620,23 @@
                     document.getElementById('editor').focus();
                 });
                 input.focus();
+            }
+            // Метод для создания всплывающего окна справки
+            static createHelpPopup(contentHTML, callback) {
+                const overlay = document.createElement('div');
+                overlay.className = 'popup-overlay';
+                overlay.innerHTML = `
+                    <div class="popup-content">
+                        <div class="help-content">${contentHTML}</div>
+                        <button id="popup-close-btn">Закрыть</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                const closeBtn = document.getElementById('popup-close-btn');
+                closeBtn.addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    if (callback) callback(); // Вызов колбэка для возврата фокуса
+                });
             }
         }
         class TextManipulator {
@@ -621,10 +744,7 @@
                     const currentFilename = filenameInput.value;
                     const processedFilename = this.processFilenameTemplate(currentFilename);
                     if (processedFilename !== currentFilename) {
-                        // Сохраняем историю ДО изменения, если применимо
-                        // (В данном случае, мы меняем значение вручную, возможно, не нужно сохранять историю изменения поля)
                         filenameInput.value = processedFilename;
-                        // console.log("Имя файла обновлено по шаблону:", processedFilename); // Опциональный лог
                     }
                 });
                 saveBtn.addEventListener('click', () => this.saveFile());
@@ -1564,9 +1684,64 @@
             const dictionaryManager = new DictionaryManager();
             const editorElement = document.getElementById('editor');
             const editor = new TextEditor(editorElement, dictionaryManager);
+
+            // Обработчик кнопки справки
+            const helpButton = document.getElementById('help-button');
+            const currentTabId = () => {
+                if (document.getElementById('editor-tab').classList.contains('active')) return 'editor';
+                if (document.getElementById('dictionary-tab').classList.contains('active')) return 'dictionary';
+                return null;
+            };
+
+            const showHelp = () => {
+                const tab = currentTabId();
+                let helpContent = '';
+                if (tab === 'editor') {
+                    helpContent = `
+                        <h3>Справка: Редактор</h3>
+                        <p>Это основное окно для редактирования текста.</p>
+                        <ul>
+							<li><strong>Автозамена:</strong> При вводе сокращений из активных словарей они автоматически заменяются на соответствующий текст.</li>
+                            <li><strong>Поиск * :</strong> Alt+X ищет следующий символ *.</li>
+                            <li><strong>Маркеры:</strong> Используйте <code>[цифра></code> и <code><цифра]</code> или <code>[имя></code> и <code><имя]</code> для навигации.</li>
+							<li><strong>Навигация по маркерам:</strong> Ctrl+цифра или Ctrl+* - переход к закрывающему маркеру. Ctrl+Alt+цифра или Ctrl+Alt+* - выделение между маркерами.</li>
+                            <li><strong>Смена раскладки:</strong> Клавиша Pause переключает раскладку для выделенного текста.</li>
+                            <li><strong>Отмена/Повтор:</strong> Ctrl+Z (или Ctrl+Я) для отмены, Ctrl+Y (или Ctrl+Н) для повтора.</li>
+                            <li><strong>Табуляция:</strong> Клавиша Tab вставляет символ табуляции.</li>
+                            <li><strong>Имя файла по шаблону:</strong> Используйте тег <code>[[имя]]</code> в имени файла, чтобы подставить текст между маркерами <code>[имя></code> и <code><имя]</code> из редактируемого текста.</li>
+							<li><strong>Удаление маркеров:</strong> Ctrl+0 удаляет все маркеры из текста.</li>
+                            <li><strong>Сохранение:</strong> Введите имя файла и нажмите "Сохранить" или Enter.</li>
+                        </ul>
+                    `;
+                } else if (tab === 'dictionary') {
+                    helpContent = `
+                        <h3>Справка: Словарь</h3>
+                        <p>Здесь вы можете управлять словарями автозамены.</p>
+                        <ul>
+                            <li><strong>Управление словарями:</strong> В левой верхней части можно загружать, экспортировать и удалять словари. Используйте чекбоксы, чтобы включить/отключить словари.</li>
+                            <li><strong>Конфликты:</strong> Если одно и то же сокращение присутствует в нескольких активных словарях, оно будет исключено из автозамены. Статус конфликта отображается под таблицей.</li>
+							<li><strong>Добавление словаря:</strong> Создайте текстовый файл с нужным названием (это будет имя словаря) и следующим содержимым: <strong>{}</strong>. Перетащите его в зону для импорта словаря.</li> 
+                            <li><strong>Редактирование словаря:</strong> Выберите словарь из списка, чтобы отредактировать его сокращения.</li>
+                            <li><strong>Таблица сокращений:</strong> Отображает сокращения и их подстановки. Конфликтующие сокращения выделены красным.</li>
+                            <li><strong>Редактирование подстановки:</strong> Выберите сокращение из таблицы, отредактируйте его в правой панели и нажмите "Сохранить".</li>
+                            <li><strong>Добавление сокращения:</strong> Введите новое сокращение и подстановку в правой панели и нажмите "Сохранить".</li>
+                            <li><strong>Удаление сокращения:</strong> Выберите сокращение, затем нажмите "Удалить".</li>
+                        </ul>
+                    `;
+                } else {
+                    helpContent = '<p>Неизвестная вкладка.</p>';
+                }
+
+                DOMUtils.createHelpPopup(helpContent, () => {
+                    // Возврат фокуса на редактор
+                    editorElement.focus();
+                });
+            };
+
+            helpButton.addEventListener('click', showHelp);
+
             editorElement.focus();
         });
     </script>
 </body>
-
 </html>
