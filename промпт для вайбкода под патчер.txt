@@ -1,0 +1,83 @@
+Промпт: Разметка кода якорями @anchor
+Правила разметки
+При создании или модификации кода каждый логический блок должен начинаться с комментария-якоря:
+
+javascript
+// @anchor:уникальное-имя
+// @desc:краткое описание (опционально)
+// @since:версия (опционально)
+Форматы якорей:
+Контекст	Синтаксис	Пример
+JavaScript	// @anchor:имя	// @anchor:class-texteditor
+CSS	/* @anchor:имя */	/* @anchor:styles-header */
+HTML	<!-- @anchor:имя -->	<!-- @anchor:html-settings -->
+Соглашения об именах:
+Префикс	Назначение	Пример
+html-*	HTML-разметка	html-editor-tab
+styles-*	CSS-стили	styles-tabs
+class-*	Классы	class-historymanager
+method-*	Методы (если отдельно)	method-undo
+init-*	Инициализация	init-domcontentloaded
+event-*	Обработчики событий	event-keydown
+Что размечать:
+Классы → @anchor:class-имякласса
+
+Методы внутри класса → @anchor:имякласса-метод
+
+Блоки HTML → между секциями
+
+Блоки стилей → между логическими группами
+
+Инициализацию → @anchor:init-*
+
+Формат патча для PatchMaster v6.0
+json
+[patch>
+{
+  "meta": {
+    "name": "Название патча"
+  },
+  "verify": {
+    "mustContain": ["обязательная строка"],
+    "mustNotContain": ["запрещённая строка"]
+  },
+  "changes": [
+    {
+      "type": "anchor_replace",
+      "startAnchor": "имя-начального-якоря",
+      "endAnchor": "имя-конечного-якоря",
+      "with": "новый код между якорями"
+    }
+  ]
+}
+<patch]
+Пример патча:
+json
+[patch>
+{
+  "meta": {
+    "name": "Добавить метод loadSettings"
+  },
+  "changes": [
+    {
+      "type": "anchor_replace",
+      "startAnchor": "texteditor-constructor",
+      "endAnchor": "texteditor-setupeventlisteners",
+      "with": "\n  constructor() {\n    this.settings = this.loadSettings();\n  }\n  \n  loadSettings() {\n    return localStorage.getItem('settings');\n  }\n  "
+    }
+  ]
+}
+<patch]
+Процесс выдачи изменений
+При модификации кода выдавай изменения блоками:
+
+text
+🔖 Блок: [название]
+Якоря: @anchor:начало → @anchor:конец
+
+❌ УДАЛИТЬ:
+[старый код]
+
+✅ ВСТАВИТЬ:
+[новый код с сохранением якорей]
+Конец промпта.
