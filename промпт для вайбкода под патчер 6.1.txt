@@ -1,0 +1,201 @@
+Промпт: Разметка кода якорями @anchor для PatchMaster v6.1
+
+=== ПРАВИЛА РАЗМЕТКИ ===
+
+Каждый логический блок кода ОБЯЗАН иметь пару якорей — открывающий и закрывающий.
+Между якорями находится тело блока. Якоря должны быть уникальными в пределах файла.
+
+Формат открывающего якоря:
+  <синтаксис-комментария> @anchor:уникальное-имя-start
+  <синтаксис-комментария> @desc:краткое описание блока (обязательно)
+
+Формат закрывающего якоря:
+  <синтаксис-комментария> @anchor:уникальное-имя-end
+
+Синтаксис комментариев по языкам:
+  JavaScript:  // @anchor:имя-start
+  CSS:         /* @anchor:имя-start */
+  HTML:        <!-- @anchor:имя-start -->
+
+Пример (JavaScript):
+  // @anchor:class-texteditor-start
+  // @desc:Главный класс редактора
+  class TextEditor {
+    // @anchor:texteditor-constructor-start
+    // @desc:Инициализирует редактор и подсистемы
+    constructor(element) {
+      this.element = element;
+      this.init();
+    }
+    // @anchor:texteditor-constructor-end
+  }
+  // @anchor:class-texteditor-end
+
+Пример (CSS):
+  /* @anchor:styles-header-start */
+  /* @desc:Стили заголовка приложения */
+  .header { font-size: 2em; }
+  /* @anchor:styles-header-end */
+
+Пример (HTML):
+  <!-- @anchor:html-editor-tab-start -->
+  <!-- @desc:Вкладка с текстовым редактором -->
+  <div id="editor-tab">
+    <textarea id="editor"></textarea>
+  </div>
+  <!-- @anchor:html-editor-tab-end -->
+
+=== СОГЛАШЕНИЯ ОБ ИМЕНАХ ===
+
+Префиксы для типов блоков:
+  html-*     — HTML-разметка
+  styles-*   — CSS-стили
+  class-*    — JavaScript-классы
+  init-*     — Блоки инициализации
+  event-*    — Обработчики событий
+
+Блок в блоке:
+  Если внутри класса выделяются методы — каждый метод получает свою пару якорей:
+    class-имякласса-start ... class-имякласса-end
+      имякласса-метод1-start ... имякласса-метод1-end
+      имякласса-метод2-start ... имякласса-метод2-end
+
+Однострочные методы:
+  Допустимо размещать якоря на той же строке, что и код:
+    getValue() { return this.value; }
+    // @anchor:module-getvalue-end
+
+=== ПРАВИЛА ДЛЯ @desc ===
+
+  • @desc ОБЯЗАТЕЛЕН для открывающих якорей
+  • Описание должно быть на русском языке
+  • Описание — одно предложение, объясняющее назначение блока
+  • @desc размещается на следующей строке после @anchor
+  • Закрывающие якоря @desc НЕ требуют
+
+=== ПРАВИЛА ДЛЯ @since ===
+
+  • Опционален
+  • Указывает версию, с которой появился блок
+  • Размещается на отдельной строке:
+    // @since:1.7.5
+
+=== ЧТО НЕЛЬЗЯ ===
+
+  • Оставлять блок без закрывающего якоря
+  • Использовать одинаковые имена для разных блоков
+  • Писать @desc для закрывающих якорей
+  • Размещать @desc на одной строке с @anchor
+
+=== ФОРМАТ ПАТЧА ===
+
+Патч размещается в тексте редактора между маркерами:
+
+  [patch>
+  {
+    "meta": {
+      "name": "Название патча"
+    },
+    "verify": {
+      "mustContain": ["строка, обязательная в тексте"],
+      "mustNotContain": ["строка, которой быть не должно"]
+    },
+    "changes": [
+      {
+        "type": "anchor_replace",
+        "startAnchor": "имя-открывающего-якоря",
+        "endAnchor": "имя-закрывающего-якоря",
+        "with": "новый код (без якорей — они будут на месте)"
+      }
+    ]
+  }
+  <patch]
+
+Пояснения:
+  • meta.name         — название патча (обязательно)
+  • verify            — опциональные проверки перед применением
+  • mustContain       — строки, которые ДОЛЖНЫ быть в тексте
+  • mustNotContain    — строки, которых НЕ ДОЛЖНО быть (защита от повторного патча)
+  • type              — "anchor_replace" (единственный тип)
+  • startAnchor       — ПОЛНОЕ имя открывающего якоря (с -start)
+  • endAnchor         — ПОЛНОЕ имя закрывающего якоря (с -end)
+  • with              — новый код блока. Отступы будут унаследованы от исходного блока
+
+Пример патча:
+
+  [patch>
+  {
+    "meta": {
+      "name": "Добавить подсказку при undo"
+    },
+    "verify": {
+      "mustContain": ["@anchor:texteditor-undo-start"],
+      "mustNotContain": ["showHint('↩ Отмена')"]
+    },
+    "changes": [
+      {
+        "type": "anchor_replace",
+        "startAnchor": "texteditor-undo-start",
+        "endAnchor": "texteditor-undo-end",
+        "with": "\n  undo() {\n    const state = this.historyManager.undo();\n    if (state) {\n      this.editor.value = state.val;\n      this.setCursorPosition(state.cur);\n      this.showHint('↩ Отмена', 1000);\n    }\n  }\n  "
+      }
+    ]
+  }
+  <patch]
+
+=== ЛОГИКА ПРИМЕНЕНИЯ ПАТЧА ===
+
+  1. Пользователь вставляет патч в текст редактора
+  2. Нажимает кнопку «🔧 Применить патч» (или Ctrl+Shift+P)
+  3. PatchMaster находит маркеры [patch>...<patch]
+  4. Парсит JSON внутри маркеров
+  5. Проверяет verify (если есть):
+     — mustContain: все строки должны присутствовать → иначе ОШИБКА
+     — mustNotContain: ни одной строки не должно быть → иначе ОШИБКА
+  6. Показывает пользователю диалог подтверждения со списком изменений
+  7. Для каждого changes:
+     а) Находит startAnchor в коде (поддерживает //, /* */, <!-- -->)
+     б) Находит endAnchor после startAnchor
+     в) Удаляет всё МЕЖДУ якорями (якоря остаются)
+     г) Вставляет новый код с сохранением отступов
+  8. Удаляет патч [patch>...<patch] из текста
+  9. Показывает результат и предлагает сохранить лог
+
+  Важно:
+  • Якоря ищутся как полные имена (с -start и -end)
+  • Отступ нового кода наследуется от строки после startAnchor
+  • Если блок не найден — патч не применяется, ошибка в лог
+  • Патч удаляется из текста после применения
+  • Лог доступен 60 секунд через кнопку «📋 Лог патча»
+
+=== ПОЛНЫЙ ПРИМЕР РАЗМЕТКИ ФАЙЛА ===
+
+  Файл: myapp.js
+
+  // @anchor:class-app-start
+  // @desc:Главный класс приложения
+  class App {
+    // @anchor:app-constructor-start
+    // @desc:Создаёт экземпляр приложения
+    constructor() {
+      this.data = [];
+      this.init();
+    }
+    // @anchor:app-constructor-end
+
+    // @anchor:app-init-start
+    // @desc:Инициализирует приложение
+    init() {
+      this.loadData();
+      this.render();
+    }
+    // @anchor:app-init-end
+  }
+  // @anchor:class-app-end
+
+  // @anchor:init-domready-start
+  // @desc:Запуск приложения после загрузки DOM
+  document.addEventListener('DOMContentLoaded', () => {
+    window.app = new App();
+  });
+  // @anchor:init-domready-end
