@@ -1,0 +1,279 @@
+// PatchMaster v7.0
+// модуль для редактора NoteWarp
+// используется для замены блоков кода, размеченных маркерами [имя> и <имя]
+// Синтаксис: 
+//   В коде: // [имя> ... // <имя]
+//   В патче: { "type": "replace", "marker": "имя", "with": "новый код" }
+
+// [patchmaster-class>
+const PatchMaster = {
+  id: "patch-master",
+  name: "PatchMaster",
+  version: "7.0",
+  description: "Замена блоков между маркерами [имя> и <имя]",
+  syntax: "[patch>\n{\n  \"meta\": { \"name\": \"Название\" },\n  \"changes\": [\n    { \"type\": \"replace\", \"marker\": \"имя\", \"with\": \"новый код\" }\n  ]\n}\n<patch]",
+
+  logEntries: [],
+
+  // -------------------- ЛОГИРОВАНИЕ --------------------
+  log: function(level, message, details) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      level: level,
+      message: message,
+      details: details || null
+    };
+    this.logEntries.push(entry);
+    console.log(`[PatchMaster ${level}] ${message}`, details || '');
+  },
+
+  clearLog: function() {
+    this.logEntries = [];
+    this.log('INFO', 'Лог очищен');
+  },
+
+  formatLog: function() {
+    let output = '=== PatchMaster v' + this.version + ' Log ===\n';
+    output += 'Время запуска: ' + new Date().toLocaleString() + '\n';
+    output += 'User Agent: ' + navigator.userAgent + '\n';
+    output += '='.repeat(50) + '\n\n';
+    
+    for (const entry of this.logEntries) {
+      output += `[${entry.timestamp}] [${entry.level}] ${entry.message}\n`;
+      if (entry.details) {
+        if (typeof entry.details === 'string') {
+          output += `  ${entry.details}\n`;
+        } else {
+          output += `  ${JSON.stringify(entry.details, null, 2).split('\n').map(l => '  ' + l).join('\n')}\n`;
+        }
+      }
+      output += '\n';
+    }
+    
+    output += '='.repeat(50) + '\nКонец лога\n';
+    return output;
+  },
+
+  saveLogToFile: function() {
+    const content = this.formatLog();
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const filename = `patchmaster-log-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.txt`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    this.log('INFO', `Лог сохранён: ${filename}`);
+    return filename;
+  },
+
+  // -------------------- ПОИСК МАРКЕРА --------------------
+  findMarker: function(text, markerName, isClosing) {
+    const marker = isClosing ? `<${markerName}]` : `[${markerName}>`;
+    // Ищем маркер с учётом возможных пробелов и комментариев
+    const regex = new RegExp(`\\/\\/\\s*\\${marker}|\\/\\*\\s*\\${marker}\\s*\\*\\/|<!--\\s*\\${marker}\\s*-->|\\${marker}`, 'm');
+    const match = text.match(regex);
+    if (match) {
+      this.log('DEBUG', `Маркер ${marker} найден`, { position: match.index });
+      return { pos: match.index, length: match[0].length };
+    }
+    this.log('WARN', `Маркер ${marker} не найден`);
+    return null;
+  },
+
+  // -------------------- ПОИСК БЛОКА --------------------
+  findBlock: function(text, markerName) {
+    const openMarker = this.findMarker(text, markerName, false);
+    if (!openMarker) return null;
+    
+    const afterOpen = text.slice(openMarker.pos + openMarker.length);
+    const closeMarker = this.findMarker(afterOpen, markerName, true);
+    if (!closeMarker) return null;
+    
+    return {
+      start: openMarker.pos,
+      openEnd: openMarker.pos + openMarker.length,
+      closeStart: openMarker.pos + openMarker.length + closeMarker.pos,
+      end: openMarker.pos + openMarker.length + closeMarker.pos + closeMarker.length
+    };
+  },
+
+  // -------------------- ЗАМЕНА БЛОКА --------------------
+  replaceBlock: function(text, markerName, newContent) {
+    this.log('INFO', `Замена блока: [${markerName}> ... <${markerName}]`);
+    
+    const block = this.findBlock(text, markerName);
+    if (!block) {
+      this.log('ERROR', `Блок с маркером ${markerName} не найден`);
+      return { text, success: false };
+    }
+    
+    // Определяем отступ из строки после открывающего маркера
+    const afterOpen = text.slice(block.openEnd);
+    const lines = afterOpen.split('\n');
+    let indent = '';
+    if (lines.length > 1 && lines[1]) {
+      const indentMatch = lines[1].match(/^(\s*)/);
+      if (indentMatch) indent = indentMatch[1];
+    }
+    
+    // Применяем отступ к новому контенту
+    const indentedContent = newContent.split('\n').map((line, i) => {
+      if (i === 0) return line;
+      return indent + line;
+    }).join('\n');
+    
+    const result = text.slice(0, block.openEnd) + indentedContent + text.slice(block.closeStart);
+    
+    this.log('INFO', `Блок заменён`, {
+      marker: markerName,
+      oldLength: block.closeStart - block.openEnd,
+      newLength: indentedContent.length
+    });
+    
+    return { text: result, success: true };
+  },
+
+  // -------------------- ПРИМЕНЕНИЕ ПАТЧА --------------------
+  applyPatchToText: function(original, patch, patchStart, patchLength) {
+    this.log('INFO', `Применение патча "${patch.meta.name}"`);
+    
+    // Удаляем сам патч
+    let result = original.slice(0, patchStart) + original.slice(patchStart + patchLength);
+    
+    // Проверка verify
+    if (patch.verify) {
+      if (patch.verify.mustContain) {
+        for (const str of patch.verify.mustContain) {
+          if (!result.includes(str)) {
+            throw new Error(`Текст не содержит "${str}"`);
+          }
+          this.log('DEBUG', `mustContain: "${str}" — найдено`);
+        }
+      }
+      if (patch.verify.mustNotContain) {
+        for (const str of patch.verify.mustNotContain) {
+          if (result.includes(str)) {
+            throw new Error(`Текст содержит "${str}"`);
+          }
+          this.log('DEBUG', `mustNotContain: "${str}" — не найдено`);
+        }
+      }
+    }
+    
+    // Применяем изменения
+    for (let i = 0; i < patch.changes.length; i++) {
+      const change = patch.changes[i];
+      this.log('INFO', `Изменение ${i+1}/${patch.changes.length}: ${change.type}`);
+      
+      if (change.type === 'replace') {
+        const marker = change.marker || change.startMarker;
+        if (!marker) {
+          this.log('ERROR', 'Не указан marker в изменении');
+          continue;
+        }
+        const applied = this.replaceBlock(result, marker, change.with);
+        if (applied.success) {
+          result = applied.text;
+          this.log('INFO', `Изменение ${i+1} применено успешно`);
+        } else {
+          this.log('ERROR', `Не удалось применить изменение ${i+1}`);
+        }
+      } else {
+        this.log('WARN', `Неизвестный тип: ${change.type}`);
+      }
+    }
+    
+    return result;
+  },
+
+  // -------------------- КНОПКА --------------------
+  toolbarButton: {
+    text: "🔧 Применить патч",
+    title: "Найти [patch>...<patch] и применить",
+    onClick: function(api) {
+      PatchMaster.clearLog();
+      PatchMaster.log('INFO', 'Начало применения патча');
+      
+      const text = api.getText();
+      const cursorPos = api.getCursor();
+      
+      const match = text.match(/\[patch>([\s\S]*?)<patch\]/);
+      if (!match) {
+        api.showHint('❌ Не найден маркер [patch>...<patch]', 3000);
+        return;
+      }
+      
+      try {
+        const patch = JSON.parse(match[1].trim());
+        
+        if (!patch.meta?.name) {
+          api.showHint('❌ Нет meta.name', 3000);
+          return;
+        }
+        
+        if (!patch.changes?.length) {
+          api.showHint('❌ Нет изменений', 3000);
+          return;
+        }
+        
+        let changesList = '';
+        for (const c of patch.changes) {
+          changesList += `\n  • ${c.marker || c.startMarker || '?'}`;
+        }
+        
+        const confirmed = confirm(
+          `Применить "${patch.meta.name}"?\nИзменений: ${patch.changes.length}${changesList}`
+        );
+        
+        if (!confirmed) {
+          api.showHint('⏸️ Отменено', 2000);
+          return;
+        }
+        
+        const newText = PatchMaster.applyPatchToText(text, patch, match.index, match[0].length);
+        api.setText(newText, cursorPos);
+        api.showHint(`✅ "${patch.meta.name}" применён`, 4000);
+        
+        // Показываем кнопку для сохранения лога
+        const existing = document.getElementById('patchmaster-log-btn');
+        if (existing) existing.remove();
+        
+        const panel = document.querySelector('.tools-panel');
+        if (panel) {
+          const btn = document.createElement('button');
+          btn.id = 'patchmaster-log-btn';
+          btn.className = 'tool-btn';
+          btn.textContent = '📋 Лог';
+          btn.title = 'Сохранить лог';
+          btn.style.backgroundColor = '#6c757d';
+          btn.onclick = () => {
+            const fn = PatchMaster.saveLogToFile();
+            api.showHint(`📋 ${fn}`, 3000);
+          };
+          panel.appendChild(btn);
+          setTimeout(() => btn.remove(), 60000);
+        }
+        
+      } catch(e) {
+        PatchMaster.log('ERROR', e.message);
+        api.showHint(`❌ ${e.message}`, 5000);
+      }
+    }
+  },
+
+  // -------------------- ЗАГЛУШКА --------------------
+  process: function(text, cursorPos, api) {
+    return { text, cursorPos };
+  }
+};
+// <patchmaster-class]
+
+// -------------------- ЭКСПОРТ --------------------
+if (typeof exports !== 'undefined') {
+  for (let key in PatchMaster) exports[key] = PatchMaster[key];
+} else if (typeof module !== 'undefined') {
+  module.exports = PatchMaster;
+} else {
+  window.PatchMaster = PatchMaster;
+}
