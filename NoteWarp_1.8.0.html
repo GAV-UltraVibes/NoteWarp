@@ -1,7 +1,8 @@
+
 <!DOCTYPE html>
 <!--
 NoteWarp — редактор для быстрого набора шаблонных текстов с автозаменой сокращений.
-Версия 1.8.0 — с настраиваемым символом перехода (Alt+X)
+Версия 1.8.1 — с настраиваемым символом перехода (Alt+X)
 
 Особенности:
 • Полностью локальное исполнение (без серверов и интернета)
@@ -706,7 +707,7 @@ body {
 <div class="app-header">
   <div class="app-title-wrapper">
     <div class="app-title" id="animated-title">NoteWarp</div>
-    <div class="app-version" id="title-version">1.8.0</div>
+    <div class="app-version" id="title-version">1.8.1</div>
   </div>
 </div>
 <!-- <html-header] -->
@@ -986,7 +987,7 @@ for (let key in MyModule) exports[key] = MyModule[key];</pre>
         <div style="text-align: center; margin: 20px 0;">
           <div style="font-size: 48px; opacity: 0.8;">📝⚡</div>
           <div style="font-size: 24px; font-weight: bold; color: #007cba;">NoteWarp</div>
-          <div style="color: #6c757d;">Версия 1.8.0 (май 2026)</div>
+          <div style="color: #6c757d;">Версия 1.8.1 (май 2026)</div>
         </div>
         <div class="help-card">
           <p>Локальный браузерный редактор для быстрого создания шаблонных текстов.</p>
@@ -1322,6 +1323,11 @@ class ModuleManager {
     btn.textContent = config.text;
     btn.className = 'tool-btn';
     btn.title = config.title || '';
+    
+    btn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
     btn.onclick = () => {
       const mod = this.modules.get(moduleId);
       if (mod && mod.enabled && config.onClick) {
@@ -1795,6 +1801,8 @@ class TextEditor {
     this.loadJumpCharSetting();
     
     this.moduleManager = new ModuleManager(this);
+
+    this.preventFocusOnToolButtons();
   }
   
   setupReferenceButton() {
@@ -1834,8 +1842,16 @@ class TextEditor {
     document.getElementById('scan-replace-btn').addEventListener('click', () => this.scanAndReplaceAll());
   }
   
+  preventFocusOnToolButtons() {
+    const toolbarButtons = document.querySelectorAll('.tool-btn, #resolve-references-btn, #marker-problems-indicator');
+    toolbarButtons.forEach(btn => {
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+    });
+  }
+  
   scanAndReplaceAll() {
-    const wasEditorFocused = document.activeElement === this.editor;
     const cursorPosBefore = this.getCursorPosition();
     
     this.saveHistoryState();
@@ -1843,11 +1859,7 @@ class TextEditor {
     const dictionary = this.dictionaryManager.getActiveDictionary();
     if (Object.keys(dictionary).length === 0) { 
       this.feedbackManager.triggerFeedback(); 
-      if (wasEditorFocused) {
-        this.editor.focus();
-        this.setCursorPosition(cursorPosBefore);
-      }
-      return; 
+      return;
     }
     const sortedKeys = Object.keys(dictionary).sort((a, b) => b.length - a.length);
     let totalReplacements = 0, i = 0;
@@ -1879,10 +1891,6 @@ class TextEditor {
     if (cursorPos !== -1) this.setCursorPosition(Math.min(cursorPos, content.length));
     else this.setCursorPosition(Math.min(cursorPosBefore, content.length));
     
-    if (wasEditorFocused) {
-      this.editor.focus();
-    }
-    
     if (totalReplacements > 0 || starCount > 0) {
       let msg = `✅ Выполнено ${totalReplacements} замен`;
       if (starCount > 0) msg += `. Добавлено ${starCount} полей (*). Используйте Alt+X.`;
@@ -1893,7 +1901,6 @@ class TextEditor {
   }
   
   resolveReferences() {
-    const wasEditorFocused = document.activeElement === this.editor;
     const cursorPosBefore = this.getCursorPosition();
     
     this.saveHistoryState();
@@ -1916,11 +1923,7 @@ class TextEditor {
       this.showHint('Ссылок не найдено', 1500);
     }
     
-    if (wasEditorFocused) {
-      this.editor.focus();
-      this.setCursorPosition(Math.min(cursorPosBefore, this.editor.value.length));
-    }
-    
+    this.setCursorPosition(Math.min(cursorPosBefore, this.editor.value.length));
     this.validator.scheduleValidation();
   }
   
@@ -2373,30 +2376,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  const settingsBtn = document.getElementById('settings-button'), closeSettings = document.getElementById('close-settings-btn'), settingsPopup = document.getElementById('settings-popup');
-  settingsBtn.addEventListener('click', () => settingsPopup.style.display = 'flex');
-  closeSettings.addEventListener('click', () => settingsPopup.style.display = 'none');
+  const settingsBtn = document.getElementById('settings-button');
+  const closeSettings = document.getElementById('close-settings-btn');
+  const settingsPopup = document.getElementById('settings-popup');
+  if (settingsBtn && closeSettings && settingsPopup) {
+    settingsBtn.addEventListener('click', () => settingsPopup.style.display = 'flex');
+    closeSettings.addEventListener('click', () => settingsPopup.style.display = 'none');
+  }
   
-  const helpBtn = document.getElementById('help-button'), helpPopup = document.getElementById('help-popup'), closeHelp = document.getElementById('close-help-btn');
-  helpBtn.addEventListener('click', () => helpPopup.style.display = 'flex');
-  closeHelp.addEventListener('click', () => helpPopup.style.display = 'none');
-  document.querySelectorAll('.help-tab').forEach(tab => tab.addEventListener('click', () => { const name = tab.dataset.tab; document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active')); tab.classList.add('active'); document.getElementById(`${name}-tab`).classList.add('active'); }));
-  document.querySelector('.help-tab[data-tab="help-editor"]').click();
+  const helpBtn = document.getElementById('help-button');
+  const helpPopup = document.getElementById('help-popup');
+  const closeHelp = document.getElementById('close-help-btn');
+  if (helpBtn && helpPopup && closeHelp) {
+    helpBtn.addEventListener('click', () => helpPopup.style.display = 'flex');
+    closeHelp.addEventListener('click', () => helpPopup.style.display = 'none');
+    document.querySelectorAll('.help-tab').forEach(tab => tab.addEventListener('click', () => {
+      const name = tab.dataset.tab;
+      document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`${name}-tab`).classList.add('active');
+    }));
+    const defaultHelpTab = document.querySelector('.help-tab[data-tab="help-editor"]');
+    if (defaultHelpTab) defaultHelpTab.click();
+  }
   
-  [settingsPopup, helpPopup].forEach(p => p.addEventListener('click', (e) => { if (e.target === p) p.style.display = 'none'; }));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { settingsPopup.style.display = 'none'; helpPopup.style.display = 'none'; } });
+  [settingsPopup, helpPopup].forEach(p => {
+    if (p) {
+      p.addEventListener('click', (e) => {
+        if (e.target === p) p.style.display = 'none';
+      });
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (settingsPopup) settingsPopup.style.display = 'none';
+      if (helpPopup) helpPopup.style.display = 'none';
+    }
+  });
   
   ed.editor.focus();
   setTimeout(() => ed.validator.validate(), 500);
 });
 
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (window.editor && window.editor.moduleManager) {
-            console.log('🔄 Принудительное обновление кнопок модулей...');
-            window.editor.moduleManager.refreshAllButtons();
-        }
-    }, 200);
+  setTimeout(() => {
+    if (window.editor && window.editor.moduleManager) {
+      console.log('🔄 Принудительное обновление кнопок модулей...');
+      window.editor.moduleManager.refreshAllButtons();
+    }
+  }, 200);
 });
 // <init-domcontentloaded]
 </script>
