@@ -1,172 +1,251 @@
-Промпт: Разметка кода маркерами [имя>
-Формат маркеров
-Каждый логический блок кода ОБЯЗАН иметь пару маркеров — открывающий и закрывающий. Между ними находится тело блока.
+PatchMaster v7.2 — инструкция по созданию патчей
+Основная концепция
 
-Открывающий маркер: <синтаксис-комментария> [имя>
+PatchMaster работает с маркерами в коде — парами [имя> и <имя], которые могут быть оформлены как комментарии:
+Язык	Открывающий	Закрывающий
+JS	// [имя>	// <имя]
+CSS	/* [имя> */	/* <имя] */
+HTML	<!-- [имя> -->	<!-- <имя] -->
 
-Закрывающий маркер: <синтаксис-комментария> <имя]
+Правила именования маркеров:
 
-Синтаксис комментариев по языкам:
+    Уникальны в пределах файла
 
-Язык	Пример
-JavaScript	// [class-app> ... // <class-app]
-CSS	/* [styles-header> ... /* <styles-header] */
-HTML	<!-- [html-tab> ... <!-- <html-tab] -->
-Правила
-Уникальность — имена маркеров должны быть уникальны в пределах файла
+    Рекомендуемые префиксы: class-, method-, styles-, html-, init-, event-
 
-Вложенность — допускается, но закрывающие маркеры идут в обратном порядке
+    Только латиница, цифры, дефисы (без пробелов)
 
-Однострочные блоки — маркеры могут быть на одной строке с кодом
+Два типа операций
+Тип 1: replace — замена содержимого одного блока
 
-Соглашения об именах
-Префикс	Назначение	Пример
-class-*	JavaScript-классы	class-texteditor
-method-*	Методы классов	method-undo
-styles-*	CSS-стили	styles-header
-html-*	HTML-разметка	html-editor-tab
-init-*	Инициализация	init-domcontentloaded
-event-*	Обработчики	event-keydown
-Примеры разметки
-JavaScript (класс)
-javascript
-// [class-texteditor>
-class TextEditor {
-  // [method-constructor>
-  constructor(element) {
-    this.element = element;
-  }
-  // <method-constructor]
+Когда использовать: Нужно полностью заменить код между открывающим и закрывающим маркером.
 
-  // [method-undo>
-  undo() {
-    this.history.undo();
-  }
-  // <method-undo]
-}
-// <class-texteditor]
-CSS
-css
-/* [styles-header> */
-.app-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-/* <styles-header] */
-HTML
-html
-<!-- [html-editor-tab> -->
-<div id="editor-tab" class="active">
-  <textarea id="editor"></textarea>
-</div>
-<!-- <html-editor-tab] -->
-Формат патча для PatchMaster v7.1
+Схема работы:
+text
+
+// [method-old>
+    старый код
+    старый код
+// <method-old]
+
+↓
+text
+
+// [method-old>
+    новый код
+    новый код
+// <method-old]
+
+Формат патча:
 json
+
 [patch>
 {
   "meta": {
     "name": "Название патча"
   },
   "verify": {
-    "mustContain": ["[class-target>"],
-    "mustNotContain": ["версия: \"1.8.0\""]
+    "mustContain": ["строка_которая_должна_быть"],
+    "mustNotContain": ["строка_которой_не_должно_быть"]
   },
   "changes": [
     {
       "type": "replace",
       "marker": "имя-маркера",
-      "with": "новый код"
+      "with": "новый код (может быть многострочным)"
     }
   ]
 }
 <patch]
-Поля патча
-Поле	Обязательно	Описание
-meta.name	✅	Название патча
-verify.mustContain	❌	Строки, которые ДОЛЖНЫ быть в тексте
-verify.mustNotContain	❌	Строки, которых НЕ ДОЛЖНО быть
-changes[].type	✅	Всегда "replace"
-changes[].marker	✅	Имя маркера (без скобок и >/<)
-changes[].with	✅	Новый код блока
-Пример патча
+
+Пример — замена метода:
 json
+
 [patch>
 {
   "meta": {
-    "name": "Добавить подсказку при undo"
+    "name": "Улучшить функцию сохранения"
   },
   "verify": {
-    "mustContain": ["[method-undo>"],
-    "mustNotContain": ["showHint('↩ Отмена')"]
+    "mustContain": ["saveFile() {"],
+    "mustNotContain": ["autoBackup"]
   },
   "changes": [
     {
       "type": "replace",
-      "marker": "method-undo",
-      "with": "\n  undo() {\n    const state = this.historyManager.undo();\n    if (state) {\n      this.editor.value = state.val;\n      this.setCursorPosition(state.cur);\n      this.showHint('↩ Отмена', 1000);\n    }\n  }\n  "
+      "marker": "method-saveFile",
+      "with": "  saveFile() {\n    const filename = this.getFilename();\n    if (this.autoBackup) this.createBackup();\n    this.writeToDisk(filename);\n    this.showHint('Сохранено', 1500);\n  }"
     }
   ]
 }
 <patch]
-Логика работы PatchMaster v7.1
-Пользователь вставляет патч в текст редактора
 
-Нажимает «🔧 Применить патч» (или Ctrl+Shift+P)
+Тип 2: insert_between — вставка между двумя существующими маркерами
 
-PatchMaster находит маркеры [patch>...<patch]
+Когда использовать: Нужно добавить новый блок кода между двумя существующими, не затрагивая их содержимое.
 
-Парсит JSON внутри маркеров
+Схема работы:
+text
 
-Проверяет verify (если есть)
+// <method-first]    ← закрывающий маркер первого блока
+// [method-second>   ← открывающий маркер второго блока
 
-Показывает диалог подтверждения
+↓ вставка между ними ↓
+text
 
-Для каждого изменения:
+// <method-first]
+// [method-new>
+    новый код
+    новый код
+// <method-new]
+// [method-second>
 
-Находит открывающий маркер [имя>
+Формат патча:
+json
 
-Находит закрывающий маркер <имя] после открывающего
-
-Заменяет содержимое между ними
-
-Сохраняет отступы от строки с открывающим маркером
-
-Удаляет [patch>...<patch] из текста
-
-Показывает результат
-
-Важно:
-
-Маркеры ищутся как точные вхождения [имя> и <имя]
-
-Комментарии //, /*, <!-- перед маркерами игнорируются
-
-Если блок не найден — патч не применяется, ошибка в лог
-
-Лог доступен 60 секунд через кнопку «📋 Лог»
-
-Полный пример размеченного файла
-javascript
-// [class-app>
-class App {
-  // [method-constructor>
-  constructor() {
-    this.data = [];
-    this.init();
-  }
-  // <method-constructor]
-
-  // [method-init>
-  init() {
-    this.loadData();
-    this.render();
-  }
-  // <method-init]
+[patch>
+{
+  "meta": {
+    "name": "Название патча"
+  },
+  "verify": {
+    "mustContain": ["// <method-first]"],
+    "mustNotContain": ["// [method-new>"]
+  },
+  "changes": [
+    {
+      "type": "insert_between",
+      "startMarker": "method-first",
+      "endMarker": "method-second",
+      "with": "// [method-new>\nновый код\n// <method-new]"
+    }
+  ]
 }
-// <class-app]
+<patch]
 
-// [init-domready>
-document.addEventListener('DOMContentLoaded', () => {
-  window.app = new App();
-});
-// <init-domready]
+Важно: startMarker и endMarker — это имена маркеров без скобок. PatchMaster сам найдёт их закрывающий и открывающий варианты.
+Пример для NoteWarp — добавление маркера метода
+
+Допустим, в классе TextEditor уже есть маркеры:
+text
+
+// [method-setupEventListeners>
+setupEventListeners() { ... }
+// <method-setupEventListeners]
+
+// [method-resolveReferences>
+resolveReferences() { ... }
+// <method-resolveReferences]
+
+Задача: Добавить новый метод scanAndReplaceAll между ними.
+
+Патч:
+json
+
+[patch>
+{
+  "meta": {
+    "name": "Добавить метод scanAndReplaceAll"
+  },
+  "verify": {
+    "mustContain": ["// <method-setupEventListeners]"],
+    "mustNotContain": ["// [method-scanAndReplaceAll>"]
+  },
+  "changes": [
+    {
+      "type": "insert_between",
+      "startMarker": "method-setupEventListeners",
+      "endMarker": "method-resolveReferences",
+      "with": "// [method-scanAndReplaceAll>\n  scanAndReplaceAll() {\n    const wasFocused = document.activeElement === this.editor;\n    this.saveHistoryState();\n    let content = this.editor.value;\n    const dict = this.dictionaryManager.getActiveDictionary();\n    for (let word in dict) {\n      content = content.replaceAll(word, dict[word]);\n    }\n    this.editor.value = content;\n    if (wasFocused) this.editor.focus();\n    this.showHint('Замены выполнены', 2000);\n  }\n// <method-scanAndReplaceAll]"
+    }
+  ]
+}
+<patch]
+
+Поле verify — защита от повторного применения
+
+Поле verify проверяет итоговый текст после удаления маркеров патча:
+Поле	Что делает
+mustContain	Патч применяется только если эти строки есть в тексте
+mustNotContain	Патч применяется только если этих строк нет в тексте
+
+Пример безопасного патча:
+json
+
+"verify": {
+  "mustContain": ["class TextEditor {"],
+  "mustNotContain": ["autoBackupEnabled"]
+}
+
+Это гарантирует, что:
+
+    Патч не применится к не тому файлу (нет нужного класса)
+
+    Патч не применится повторно (уже есть искомый код)
+
+Правила форматирования нового кода
+
+PatchMaster автоматически сохраняет отступы:
+
+    Отступ берётся из строки с открывающим маркером (для replace) или из строки после startMarker (для insert_between)
+
+    Каждая строка нового кода получает этот отступ (кроме первой, если вставка многострочная)
+
+Плохо (ручное форматирование):
+json
+
+"with": "  newCode() {\n    doSomething();\n  }"
+
+Хорошо (естественное форматирование):
+json
+
+"with": "newCode() {\n  doSomething();\n}"
+
+PatchMaster сам добавит нужные пробелы в начало каждой строки.
+Полный пример с обоими типами изменений
+json
+
+[patch>
+{
+  "meta": {
+    "name": "Рефакторинг класса Editor v2"
+  },
+  "verify": {
+    "mustContain": ["class Editor {"],
+    "mustNotContain": ["version: \"2.0\""]
+  },
+  "changes": [
+    {
+      "type": "replace",
+      "marker": "method-save",
+      "with": "save() {\n  this.backup();\n  this.writeFile();\n  this.log('Saved');\n}"
+    },
+    {
+      "type": "insert_between",
+      "startMarker": "method-save",
+      "endMarker": "method-load",
+      "with": "// [method-autosave>\nautosave() {\n  if (this.modified) this.save();\n}\n// <method-autosave]"
+    }
+  ]
+}
+<patch]
+
+Частые ошибки и их решение
+Ошибка	Причина	Решение
+Блок с маркером X не найден	Маркера нет в коде	Добавь маркер вручную или先用 insert_between
+Текст содержит "..."	Патч уже применён	Удали mustNotContain или обнови проверку
+Некорректный JSON	Ошибка в синтаксисе патча	Проверь кавычки и запятые
+startMarker не найден	insert_between не видит маркер	Убедись, что маркер существует и правильно назван
+Быстрая памятка
+text
+
+replace          → меняет содержимое одного блока
+insert_between   → вставляет новый блок между двумя существующими
+
+startMarker      → имя маркера, ПОСЛЕ которого вставляем (его закрывающий маркер)
+endMarker        → имя маркера, ПЕРЕД которым вставляем (его открывающий маркер)
+
+verify.mustContain       → защита от неверного контекста
+verify.mustNotContain    → защита от повторного применения
+
+PatchMaster v7.2 — это инструмент для точечных изменений кода. Он не требует указания точных позиций, достаточно правильно назвать маркеры.
