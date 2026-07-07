@@ -1,9 +1,9 @@
-// PatchMaster v7.2 — замена блоков между [имя> и <имя] + вставка между маркерами
+// PatchMaster v7.3 — замена блоков между [имя> и <имя] + вставка между маркерами
 
 const PatchMaster = {
   id: "patch-master",
   name: "PatchMaster",
-  version: "7.2",
+  version: "7.3",
   description: "Замена блоков между маркерами [имя> и <имя], вставка между маркерами",
   syntax: "[patch>\n{\n  \"meta\": { \"name\": \"Название\" },\n  \"changes\": [\n    { \"type\": \"replace\", \"marker\": \"имя\", \"with\": \"новый код\" },\n    { \"type\": \"insert_between\", \"startMarker\": \"якорь1\", \"endMarker\": \"якорь2\", \"with\": \"новый код между\" }\n  ]\n}\n<patch]",
 
@@ -99,13 +99,9 @@ const PatchMaster = {
   },
 
   formatContent: function(content, indent) {
-    if (!content.includes('\n')) {
-      return '\n' + indent + content + '\n' + indent;
-    }
-    return content.split('\n').map((line, i) => {
-      if (i === 0) return line;
-      return indent + line;
-    }).join('\n');
+    const lines = content.split('\n');
+    const formatted = lines.map(line => indent + line).join('\n');
+    return '\n' + formatted + '\n' + indent;
   },
 
   replaceBlock: function(text, markerName, newContent) {
