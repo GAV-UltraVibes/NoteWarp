@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <!--
 NoteWarp — редактор для быстрого набора шаблонных текстов с автозаменой сокращений.
-Версия 1.8.1 — с настраиваемым символом перехода (Alt+X)
+Версия 1.8.2 — с настраиваемым символом перехода (Alt+X)
 
 Особенности:
 • Полностью локальное исполнение (без серверов и интернета)
@@ -708,7 +708,7 @@ body {
 <div class="app-header">
   <div class="app-title-wrapper">
     <div class="app-title" id="animated-title">NoteWarp</div>
-    <div class="app-version" id="title-version">1.8.1</div>
+    <div class="app-version" id="title-version">1.8.2</div>
   </div>
 </div>
 <!-- <html-header] -->
@@ -753,8 +753,7 @@ body {
 </div>
 <!-- <html-editor-tab] -->
 
-<!-- [html-dictionary-tab> -->
-<div id="dictionary-tab">
+<!-- [html-dictionary-tab> --><div id="dictionary-tab">
   <div class="dictionary-manager">
     <div class="shortcuts-list">
       <div class="dictionary-panel">
@@ -766,7 +765,7 @@ body {
           </table>
           <div id="conflict-status" class="conflict-status"></div>
         </div>
-        <div class="drop-zone" id="dict-drop-zone">Перетащите файл словаря (TXT) сюда</div>
+        <div class="drop-zone" id="dict-drop-zone">Перетащите файл словаря (TXT) или кликните для создания нового</div>
       </div>
       <div class="editing-dict-panel">
         <h3 id="editing-dict-title">Редактирование словаря</h3>
@@ -796,8 +795,7 @@ body {
       </div>
     </div>
   </div>
-</div>
-<!-- <html-dictionary-tab] -->
+</div><!-- <html-dictionary-tab] -->
 
 <!-- [html-modules-tab> -->
 <div id="modules-tab">
@@ -988,7 +986,7 @@ for (let key in MyModule) exports[key] = MyModule[key];</pre>
         <div style="text-align: center; margin: 20px 0;">
                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyYzJjMmMiLz48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iIzY2NjY2NiIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMTQiIHk9IjgiIHdpZHRoPSI1IiBoZWlnaHQ9IjQ4IiByeD0iMS41IiBmaWxsPSIjODg4ODg4IiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMiIgeT0iOCIgd2lkdGg9IjUiIGhlaWdodD0iNDgiIHJ4PSIxLjUiIGZpbGw9IiNhYWFhYWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjMwIiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iI2NjY2NjYyIgb3BhY2l0eT0iMC44Ii8+PHJlY3QgeD0iMzgiIHk9IjgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0OCIgcng9IjMiIGZpbGw9IiMwMDdjYmEiLz48dGV4dCB4PSI0NCIgeT0iMjgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+KjwvdGV4dD48L3N2Zz4=" alt="NoteWarp" style="width:64px; height:64px; margin-bottom:12px;">
           <div style="font-size: 24px; font-weight: bold; color: #007cba;">NoteWarp</div>
-          <div style="color: #6c757d;">Версия 1.8.1 (май 2026)</div>
+          <div style="color: #6c757d;">Версия 1.8.2 (июнь 2026)</div>
         </div>
         <div class="help-card">
           <p>Локальный браузерный редактор для быстрого создания шаблонных текстов.</p>
@@ -1047,38 +1045,49 @@ class DOMUtils {
   static clearError(element) {
     element.style.display = 'none';
   }
-  static createTagInputPopup(callback) {
+  static validateFilename(name) {
+    if (!name || !name.trim()) return { valid: false, error: 'Имя не может быть пустым' };
+    const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
+    if (invalidChars.test(name)) return { valid: false, error: 'Недопустимые символы: <>:"/\\|?*' };
+    if (name.length > 255) return { valid: false, error: 'Имя слишком длинное (макс. 255)' };
+    return { valid: true, error: null };
+  }
+  static createTagInputPopup(callback, options = {}) {
+    const allowSpaces = options.allowSpaces === true;
+    const placeholder = options.placeholder || 'Имя';
+    const title = options.title || 'Введите имя';
     const overlay = document.createElement('div');
     overlay.className = 'popup-overlay';
     overlay.innerHTML = `
       <div class="popup-content">
-        <h3>Введите имя маркера</h3>
-        <input type="text" id="tag-input" placeholder="Имя маркера">
-        <button id="popup-ok-btn">Ок</button>
-        <button id="popup-cancel-btn">Отмена</button>
+        <h3>${title}</h3>
+        <input type="text" id="tag-input" placeholder="${placeholder}">
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+          ${allowSpaces ? 'Пробелы допустимы. Недопустимы: <>:"/\\|?*' : 'Только латиница, цифры и дефисы (без пробелов).'}
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
+          <button id="popup-cancel-btn" style="padding: 6px 14px; background-color: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">Отмена</button>
+          <button id="popup-ok-btn" style="padding: 6px 14px; background-color: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer;">Ок</button>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
     const input = document.getElementById('tag-input');
     const okBtn = document.getElementById('popup-ok-btn');
     const cancelBtn = document.getElementById('popup-cancel-btn');
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const name = input.value.trim();
-        if (name.includes(' ')) { alert('Имя маркера не должно содержать пробелы.'); return; }
-        if (name) callback(name);
-        document.body.removeChild(overlay);
-        document.getElementById('editor').focus();
-      }
-    });
-    okBtn.addEventListener('click', () => {
+    const submit = () => {
       const name = input.value.trim();
-      if (name.includes(' ')) { alert('Имя маркера не должно содержать пробелы.'); return; }
-      if (name) callback(name);
+      if (!name) { alert('Имя не может быть пустым'); input.focus(); return; }
+      if (!allowSpaces && name.includes(' ')) { alert('Пробелы недопустимы'); input.focus(); return; }
+      callback(name);
       document.body.removeChild(overlay);
       document.getElementById('editor').focus();
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      if (e.key === 'Escape') { document.body.removeChild(overlay); document.getElementById('editor').focus(); }
     });
+    okBtn.addEventListener('click', submit);
     cancelBtn.addEventListener('click', () => {
       document.body.removeChild(overlay);
       document.getElementById('editor').focus();
@@ -1977,10 +1986,12 @@ class TextEditor {
     let filename = document.getElementById('filename-input').value.trim();
     const errorElement = document.getElementById('filename-error');
     filename = this.processFilenameTemplate(filename);
-    if (!filename) { DOMUtils.showError(errorElement, 'Имя файла не может быть пустым'); if (wasEditorFocused) this.editor.focus(); return; }
-    const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
-    if (invalidChars.test(filename)) { DOMUtils.showError(errorElement, 'Недопустимые символы'); if (wasEditorFocused) this.editor.focus(); return; }
-    if (filename.length > 255) { DOMUtils.showError(errorElement, 'Имя файла слишком длинное'); if (wasEditorFocused) this.editor.focus(); return; }
+    const validation = DOMUtils.validateFilename(filename);
+    if (!validation.valid) {
+      DOMUtils.showError(errorElement, validation.error);
+      if (wasEditorFocused) this.editor.focus();
+      return;
+    }
     DOMUtils.clearError(errorElement);
     const blob = new Blob([this.editor.value], { type: 'text/plain' });
     const a = document.createElement('a');
@@ -2260,6 +2271,65 @@ class DictionaryManager {
   }
   
   removeDictionary(name) { if (confirm(`Удалить "${name}"?`)) { delete this.dictionaries[name]; this.activeDictionaries.delete(name); if (this.selectedDictionaryName === name) this.selectedDictionaryName = null; this.saveDictionaries(); this.saveActiveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.renderDictionariesList(); this.updateConflictStatus(); this.updateCurrentDictNameDisplay(); this.clearEditFields(); } }
+  
+  renameDictionary(oldName) {
+    DOMUtils.createTagInputPopup((newName) => {
+      if (newName === oldName) return;
+      if (this.dictionaries[newName]) {
+        alert(`Словарь "${newName}" уже существует`);
+        return;
+      }
+      const validation = DOMUtils.validateFilename(newName);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      this.dictionaries[newName] = this.dictionaries[oldName];
+      delete this.dictionaries[oldName];
+      if (this.activeDictionaries.has(oldName)) {
+        this.activeDictionaries.delete(oldName);
+        this.activeDictionaries.add(newName);
+      }
+      if (this.selectedDictionaryName === oldName) this.selectedDictionaryName = newName;
+      this.saveDictionaries();
+      this.saveActiveDictionaries();
+      this.rebuildActiveDictionary();
+      this.checkConflicts();
+      this.renderShortcutsTable();
+      this.renderDictionariesList();
+      this.updateConflictStatus();
+      this.updateCurrentDictNameDisplay();
+      if (window.editor) window.editor.showHint(`✅ Словарь переименован в "${newName}"`, 2000);
+    }, { allowSpaces: true, title: 'Переименовать словарь', placeholder: 'Новое имя словаря' });
+  }
+  
+  createNewDictionary() {
+    DOMUtils.createTagInputPopup((name) => {
+      if (this.dictionaries[name]) {
+        alert(`Словарь "${name}" уже существует`);
+        return;
+      }
+      const validation = DOMUtils.validateFilename(name);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      this.dictionaries[name] = {};
+      this.activeDictionaries.add(name);
+      this.selectedDictionaryName = name;
+      this.saveDictionaries();
+      this.saveActiveDictionaries();
+      this.rebuildActiveDictionary();
+      this.checkConflicts();
+      this.renderShortcutsTable();
+      this.renderDictionariesList();
+      this.updateConflictStatus();
+      this.updateCurrentDictNameDisplay();
+      this.clearEditFields();
+      if (window.editor) window.editor.showHint(`✅ Словарь "${name}" создан`, 2000);
+    }, { allowSpaces: true, title: 'Новый словарь', placeholder: 'Имя нового словаря' });
+  }
+  
   toggleDictionary(name) { if (this.activeDictionaries.has(name)) this.activeDictionaries.delete(name); else this.activeDictionaries.add(name); this.saveActiveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.renderDictionariesList(); this.updateConflictStatus(); this.clearEditFields(); }
   exportDictionary(name) { if (this.dictionaries[name]) { const blob = new Blob([JSON.stringify(this.dictionaries[name], null, 2)], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name+'.txt'; a.click(); URL.revokeObjectURL(a.href); } }
   rebuildActiveDictionary() { this.combinedActiveDictionary = {}; for (let n of this.activeDictionaries) Object.assign(this.combinedActiveDictionary, this.dictionaries[n]); for (let c of this.conflictingShortcuts) delete this.combinedActiveDictionary[c]; }
@@ -2279,7 +2349,7 @@ class DictionaryManager {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = this.activeDictionaries.has(n); cb.dataset.dictName = n; cb.addEventListener('change', (e) => this.toggleDictionary(e.target.dataset.dictName));
       const td1 = document.createElement('td'); td1.appendChild(cb);
       const td2 = document.createElement('td'); td2.textContent = n;
-      const td3 = document.createElement('td'); td3.innerHTML = `<button class="export-dict-btn" data-dict-name="${n}">Экспорт</button><button class="delete-dict-btn" data-dict-name="${n}">Удалить</button>`;
+      const td3 = document.createElement('td'); td3.innerHTML = `<button class="export-dict-btn" data-dict-name="${n}">Экспорт</button><button class="rename-dict-btn" data-dict-name="${n}">Переименовать</button><button class="delete-dict-btn" data-dict-name="${n}">Удалить</button>`;
       row.appendChild(td1); row.appendChild(td2); row.appendChild(td3); tbody.appendChild(row);
     }
   }
@@ -2317,7 +2387,7 @@ class DictionaryManager {
   setupEventListeners() {
     document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', (e) => { const id = e.target.dataset.tab; document.querySelectorAll('[id$="-tab"]').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
     document.getElementById('shortcuts-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.shortcut) this.selectShortcut(row.dataset.shortcut); });
-    document.getElementById('dictionaries-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.dictName) { this.selectedShortcut = null; document.querySelectorAll('#dictionaries-table-body tr').forEach(r => r.classList.remove('selected')); row.classList.add('selected'); this.selectedDictionaryName = row.dataset.dictName; this.clearEditFields(); this.renderShortcutsTable(); this.updateCurrentDictNameDisplay(); } if (e.target.classList.contains('export-dict-btn')) this.exportDictionary(e.target.dataset.dictName); if (e.target.classList.contains('delete-dict-btn')) this.removeDictionary(e.target.dataset.dictName); });
+    document.getElementById('dictionaries-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.dictName) { this.selectedShortcut = null; document.querySelectorAll('#dictionaries-table-body tr').forEach(r => r.classList.remove('selected')); row.classList.add('selected'); this.selectedDictionaryName = row.dataset.dictName; this.clearEditFields(); this.renderShortcutsTable(); this.updateCurrentDictNameDisplay(); } if (e.target.classList.contains('export-dict-btn')) this.exportDictionary(e.target.dataset.dictName); if (e.target.classList.contains('delete-dict-btn')) this.removeDictionary(e.target.dataset.dictName); if (e.target.classList.contains('rename-dict-btn')) this.renameDictionary(e.target.dataset.dictName); });
     document.getElementById('save-shortcut-btn').addEventListener('click', () => this.addOrUpdateShortcut(document.getElementById('edit-shortcut').value, document.getElementById('edit-replacement').value));
     document.getElementById('delete-shortcut-btn').addEventListener('click', () => this.deleteShortcut(document.getElementById('edit-shortcut').value));
   }
@@ -2325,6 +2395,7 @@ class DictionaryManager {
   setupDropZone() {
     const dz = document.getElementById('dict-drop-zone');
     if (!dz) return;
+    dz.addEventListener('click', () => this.createNewDictionary());
     dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
     dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) { let name = file.name; if (name.endsWith('.txt')) name = name.slice(0,-4); if (this.dictionaries[name] && !confirm(`Заменить "${name}"?`)) return; this.loadDictionaryFromFile(file, name); } });
