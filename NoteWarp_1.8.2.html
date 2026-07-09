@@ -896,12 +896,12 @@ body {
 </div>
 <!-- <html-settings-popup] -->
 
-<!-- [html-help-popup> -->
-<div id="help-popup" class="popup-overlay" style="display:none;">
+<!-- [html-help-popup> --><div id="help-popup" class="popup-overlay" style="display:none;">
   <div class="popup-content help-popup">
     <div class="help-tabs">
       <button class="help-tab active" data-tab="help-editor">📝 Редактор</button>
       <button class="help-tab" data-tab="help-dictionary">📚 Словарь</button>
+      <button class="help-tab" data-tab="help-templates">📋 Шаблоны</button>
       <button class="help-tab" data-tab="help-modules">🧩 Модули</button>
       <button class="help-tab" data-tab="help-about">ℹ️ О программе</button>
     </div>
@@ -914,15 +914,15 @@ body {
           <thead><tr><th>Клавиша</th><th>Действие</th></tr></thead>
           <tbody>
             <tr><td><kbd>Alt+X</kbd></td><td>Перейти к следующему <code>*</code></td></tr>
-            <tr><td><kbd>Ctrl+1…9</kbd></td><td>Перейти к разделу</kbd></td></tr>
-            <tr><td><kbd>Ctrl+Alt+1…9</kbd></kbd></td><td>Выделить раздел</kbd></td></tr>
-            <tr><td><kbd>Ctrl+R</kbd></kbd></td><td>Развернуть ссылки <code>[[цифра]]</code></kbd></td></tr>
-            <tr><td><kbd>Ctrl+M</kbd></kbd></td><td>Заменить всё (каскадные замены)</kbd></kbd></td></tr>
-            <tr><td><kbd>Ctrl+0</kbd></kbd></td><td>Удалить все маркеры</kbd></kbd></td></tr>
-            <tr><td><kbd>Ctrl+Z</kbd></kbd></td><td>Отмена</kbd></kbd></td></tr>
-            <tr><td><kbd>Ctrl+Y</kbd></kbd></td><td>Повтор</kbd></kbd></td></tr>
-            <tr><td><kbd>Pause</kbd></kbd></td><td>Сменить раскладку выделенного</kbd></kbd></td></tr>
-            <tr><td><kbd>Tab</kbd></kbd></td><td>Вставить отступ</kbd></kbd></td></tr>
+            <tr><td><kbd>Ctrl+1…9</kbd></td><td>Перейти к разделу</td></tr>
+            <tr><td><kbd>Ctrl+Alt+1…9</kbd></td><td>Выделить раздел</td></tr>
+            <tr><td><kbd>Ctrl+R</kbd></td><td>Развернуть ссылки <code>[[цифра]]</code></td></tr>
+            <tr><td><kbd>Ctrl+M</kbd></td><td>Заменить всё (каскадные замены)</td></tr>
+            <tr><td><kbd>Ctrl+0</kbd></td><td>Удалить все маркеры</td></tr>
+            <tr><td><kbd>Ctrl+Z</kbd></td><td>Отмена</td></tr>
+            <tr><td><kbd>Ctrl+Y</kbd></td><td>Повтор</td></tr>
+            <tr><td><kbd>Pause</kbd></td><td>Сменить раскладку выделенного</td></tr>
+            <tr><td><kbd>Tab</kbd></td><td>Вставить отступ</td></tr>
           </tbody>
         </table>
       </div>
@@ -932,31 +932,52 @@ body {
     <!-- [html-help-dictionary> -->
     <div class="help-tab-content" id="help-dictionary-tab">
       <div class="help-section">
-        <p>Словари содержат сокращения и их подстановки.</p>
-        <h4>Добавление нового словаря</h4>
-        <p>Создайте текстовый файл .txt с содержимым <code>{}</code>, переименуйте подходящим именем и перетащите в зону импорта.</p>
+        <h4>Создание словаря</h4>
+        <p>Кликните по зоне импорта внизу панели словарей и введите имя. Словарь создастся пустым и сразу активируется.</p>
         <h4>Добавление сокращения</h4>
-        <p>Выберите словарь для редактирования в левой панели. Введите сокращение и подстановку в правой панели, нажмите <strong>Сохранить</strong>.</p>
-        <h4>Добавление меток быстрого перехода</h4>
-        <p>Расставьте в шаблоне символы <code>*</code> в местах ввода значений. Если вам часто нужно редактировать, удалять или дополнять определённые разделы текста, заключите их в <code>[1> такие нумерованные метки <1]</code>.</p>
-        <h4>Добавление ссылок</h4>
-        <p> <code>[1> Текст <1]</code> можно дублировать сразу в нескольких местах - расставьте ссылки <code>[[1]]</code> на соответствующий нумерованный раздел. </p>
-        <h4>Динамические теги даты и времени</h4>
-        <p>Используйте их в подстановке, чтобы вставить текущие дату и время:</p>
-        <table class="shortcuts-table">
-          <thead><tr><th>Тег</th><th>Пример значения</th></tr></thead>
-          <tbody>
-            <tr><td><code>[дата]</code></kbd></td><td>14.02.2026</kbd></td></tr>
-            <tr><td><code>[дата_iso]</code></kbd></td><td>2026-02-14</kbd></td></tr>
-            <tr><td><code>[время]</code></kbd></td><td>14:30</kbd></td></tr>
-            <tr><td><code>[время_iso]</code></kbd></td><td>14:30:22</kbd></td></tr>
-          </tbody>
-        </table>
-        <h4>Конфликты сокращений</h4>
-        <p>Если одно сокращение есть в нескольких активных словарях, оно не будет работать. Статус конфликтов отображается жёлтой полосой.</p>
+        <p>Выберите словарь в таблице слева. В правой панели введите сокращение и подстановку, нажмите <strong>Сохранить</strong>.</p>
+        <h4>Импорт/экспорт</h4>
+        <p>Словари хранятся как JSON. Перетащите <code>.txt</code> файл в зону импорта для добавления. Кнопка «Экспорт» сохраняет словарь в файл.</p>
+        <h4>Конфликты</h4>
+        <p>Если одно сокращение есть в нескольких активных словарях — оно не сработает. Статус конфликтов отображается жёлтой полосой.</p>
       </div>
     </div>
     <!-- <html-help-dictionary] -->
+    
+    <!-- [html-help-templates> -->
+    <div class="help-tab-content" id="help-templates-tab">
+      <div class="help-section">
+        <h4>Метки быстрого перехода (<code>*</code>)</h4>
+        <p>Расставьте в подстановке символы <code>*</code> в местах, где нужно быстро вводить значения. После замены нажмите <kbd>Alt+X</kbd> для перехода между ними.</p>
+        <p>Удобно для последовательных заполнений — например, обязательных измерений в медкарте: давление, пульс, температура.</p>
+        <h4>Нумерованные метки (<code>[1>...<1]</code>)</h4>
+        <p>Заключайте в метки блоки текста, которые нужно часто редактировать, дополнять или переписывать. Переход: <kbd>Ctrl+1…9</kbd> (курсор в конец), <kbd>Ctrl+Alt+1…9</kbd> (выделить содержимое).</p>
+        <p>Совет: организуйте метки по аналогии с цифровой клавиатурой. Например, <code>1-4-7</code> — одна сторона (проксимально → середина → дистально), <code>3-6-9</code> — другая. Зависит от вашего воркфлоу.</p>
+        <h4>Двухпроходные шаблоны</h4>
+        <p>Маленькое сокращение-рыба быстро модифицируется на первом проходе, затем разворачивается в большой шаблон из пачки мелких сокращений, готовый к финишному заполнению.</p>
+        <p>Пример:</p>
+        <pre class="syntax-code">// Сокращение "рыба\":
+[курсор] [1>Осмотр<1] [2>Жалобы<2]
+
+// После первого прохода (ввели данные):
+Осмотр терапевта
+Жалобы на боль в спине
+
+// Затем Ctrl+M разворачает в большой шаблон:
+[курсор] 📋 МЕДИЦИНСКАЯ КАРТА
+Дата: [дата]
+
+Осмотр: Осмотр терапевта
+Жалобы: Жалобы на боль в спине
+
+Анамнез: *
+Объективно: *
+Диагноз: *
+Лечение: *</pre>
+        <p>Так можно строить шаблоны любой сложности — от простых форм до разветвлённых структур.</p>
+      </div>
+    </div>
+    <!-- <html-help-templates] -->
 
     <!-- [html-help-modules> -->
     <div class="help-tab-content" id="help-modules-tab">
@@ -986,7 +1007,7 @@ for (let key in MyModule) exports[key] = MyModule[key];</pre>
         <div style="text-align: center; margin: 20px 0;">
                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyYzJjMmMiLz48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iIzY2NjY2NiIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMTQiIHk9IjgiIHdpZHRoPSI1IiBoZWlnaHQ9IjQ4IiByeD0iMS41IiBmaWxsPSIjODg4ODg4IiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMiIgeT0iOCIgd2lkdGg9IjUiIGhlaWdodD0iNDgiIHJ4PSIxLjUiIGZpbGw9IiNhYWFhYWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjMwIiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iI2NjY2NjYyIgb3BhY2l0eT0iMC44Ii8+PHJlY3QgeD0iMzgiIHk9IjgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0OCIgcng9IjMiIGZpbGw9IiMwMDdjYmEiLz48dGV4dCB4PSI0NCIgeT0iMjgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+KjwvdGV4dD48L3N2Zz4=" alt="NoteWarp" style="width:64px; height:64px; margin-bottom:12px;">
           <div style="font-size: 24px; font-weight: bold; color: #007cba;">NoteWarp</div>
-          <div style="color: #6c757d;">Версия 1.8.2 (июнь 2026)</div>
+          <div style="color: #6c757d;">Версия 1.8.2 (июль 2026)</div>
         </div>
         <div class="help-card">
           <p>Локальный браузерный редактор для быстрого создания шаблонных текстов.</p>
@@ -1031,8 +1052,7 @@ for (let key in MyModule) exports[key] = MyModule[key];</pre>
     
     <button id="close-help-btn">Закрыть</button>
   </div>
-</div>
-<!-- <html-help-popup] -->
+</div><!-- <html-help-popup] -->
 
 <!-- [scripts> -->
 <script>
@@ -2460,8 +2480,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const helpPopup = document.getElementById('help-popup');
   const closeHelp = document.getElementById('close-help-btn');
   if (helpBtn && helpPopup && closeHelp) {
-    helpBtn.addEventListener('click', () => helpPopup.style.display = 'flex');
+    // Флаг для отслеживания первого открытия
+    let isFirstOpen = true;
+    
+    helpBtn.addEventListener('click', () => {
+      helpPopup.style.display = 'flex';
+      
+      // Активация первой вкладки при первом открытии
+      if (isFirstOpen) {
+        isFirstOpen = false;
+        const editorTab = document.querySelector('.help-tab[data-tab="help-editor"]');
+        const editorContent = document.getElementById('help-editor-tab');
+        if (editorTab) editorTab.classList.add('active');
+        if (editorContent) editorContent.classList.add('active');
+      }
+    });
+    
     closeHelp.addEventListener('click', () => helpPopup.style.display = 'none');
+    
     document.querySelectorAll('.help-tab').forEach(tab => tab.addEventListener('click', () => {
       const name = tab.dataset.tab;
       document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active'));
@@ -2469,8 +2505,6 @@ document.addEventListener('DOMContentLoaded', () => {
       tab.classList.add('active');
       document.getElementById(`${name}-tab`).classList.add('active');
     }));
-    const defaultHelpTab = document.querySelector('.help-tab[data-tab="help-editor"]');
-    if (defaultHelpTab) defaultHelpTab.click();
   }
   
   [settingsPopup, helpPopup].forEach(p => {
@@ -2489,15 +2523,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   ed.editor.focus();
   setTimeout(() => ed.validator.validate(), 500);
-});
-
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (window.editor && window.editor.moduleManager) {
-      console.log('🔄 Принудительное обновление кнопок модулей...');
-      window.editor.moduleManager.refreshAllButtons();
-    }
-  }, 200);
 });
 // <init-domcontentloaded]
 </script>
