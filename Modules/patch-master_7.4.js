@@ -1,10 +1,10 @@
-// PatchMaster v7.3 — замена блоков между [имя> и <имя] + вставка между маркерами
+// PatchMaster v7.4 — замена блоков между [имя> и <имя] + вставка между маркерами
 
 const PatchMaster = {
   id: "patch-master",
   name: "PatchMaster",
-  version: "7.3",
-  description: "Замена блоков между маркерами [имя> и <имя], вставка между маркерами",
+  version: "7.4",
+  description: "Замена блоков между маркерами [имя> и <имя>, вставка между маркерами",
   syntax: "[patch>\n{\n  \"meta\": { \"name\": \"Название\" },\n  \"changes\": [\n    { \"type\": \"replace\", \"marker\": \"имя\", \"with\": \"новый код\" },\n    { \"type\": \"insert_between\", \"startMarker\": \"якорь1\", \"endMarker\": \"якорь2\", \"with\": \"новый код между\" }\n  ]\n}\n<patch]",
 
   logEntries: [],
@@ -58,6 +58,47 @@ const PatchMaster = {
     URL.revokeObjectURL(a.href);
     this.log('INFO', `Лог сохранён: ${filename}`);
     return filename;
+  },
+
+  saveAsHTML: function(api) {
+    const filenameInput = document.getElementById('filename-input');
+    if (!filenameInput) {
+      api.showHint('❌ Поле имени файла не найдено', 2000);
+      return;
+    }
+    
+    let filename = filenameInput.value.trim();
+    if (!filename) {
+      api.showHint('❌ Имя файла пустое', 2000);
+      return;
+    }
+    
+    // Валидация имени файла
+    if (typeof DOMUtils !== 'undefined' && DOMUtils.validateFilename) {
+      const validation = DOMUtils.validateFilename(filename);
+      if (!validation.valid) {
+        api.showHint(`❌ ${validation.error}`, 2000);
+        return;
+      }
+    } else {
+      // Резервная валидация
+      const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
+      if (invalidChars.test(filename)) {
+        api.showHint('❌ Недопустимые символы в имени', 2000);
+        return;
+      }
+    }
+    
+    const text = api.getText();
+    const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    
+    api.showHint(`💾 Сохранено: ${filename}.html`, 2000);
+    this.log('INFO', `Файл сохранён: ${filename}.html`);
   },
 
   findMarker: function(text, markerName, isClosing) {
@@ -299,6 +340,38 @@ const PatchMaster = {
         api.showHint(`❌ ${e.message}`, 5000);
       }
     }
+  },
+
+  onEnable: function(api) {
+    // Добавляем кнопку сохранения HTML
+    const existingSaveBtn = document.getElementById('patchmaster-save-html-btn');
+    if (existingSaveBtn) existingSaveBtn.remove();
+    
+    const panel = document.querySelector('.tools-panel');
+    if (panel) {
+      const btn = document.createElement('button');
+      btn.id = 'patchmaster-save-html-btn';
+      btn.className = 'tool-btn';
+      btn.textContent = '💾 Сохранить HTML';
+      btn.title = 'Сохранить текущий текст как HTML с именем из строки именования';
+      btn.style.backgroundColor = '#28a745';
+      btn.onclick = () => {
+        PatchMaster.saveAsHTML(api);
+      };
+      panel.appendChild(btn);
+    }
+    
+    api.showHint('🔧 PatchMaster активирован', 2000);
+  },
+
+  onDisable: function(api) {
+    const saveBtn = document.getElementById('patchmaster-save-html-btn');
+    if (saveBtn) saveBtn.remove();
+    
+    const logBtn = document.getElementById('patchmaster-log-btn');
+    if (logBtn) logBtn.remove();
+    
+    api.showHint('🔧 PatchMaster деактивирован', 2000);
   },
 
   process: function(text, cursorPos, api) {
