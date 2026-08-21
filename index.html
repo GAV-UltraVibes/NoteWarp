@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <!--
 NoteWarp — редактор для быстрого набора шаблонных текстов с автозаменой сокращений.
-Версия 1.7.5 — с настраиваемым символом перехода (Alt+X)
+Версия 1.8.4 — с настраиваемым символом перехода (Alt+X)
 
 Особенности:
 • Полностью локальное исполнение (без серверов и интернета)
@@ -13,19 +13,22 @@ NoteWarp — редактор для быстрого набора шаблон�
 • Поддержка именованных и нумерованных маркеров для навигации
 • Динамические теги даты и времени
 • Система модулей (drag-n-drop установка)
-• @anchor комментарии для патчинга
+• [name> ... <name] комментарии для навигации по коду
 
 Copyright (c) 2024-2026 Александр Гаркавцев, DeepSeek, Qwen, Алиса
 -->
+<!-- [html-doctype> -->
 <html>
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyYzJjMmMiLz48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iIzY2NjY2NiIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMTQiIHk9IjgiIHdpZHRoPSI1IiBoZWlnaHQ9IjQ4IiByeD0iMS41IiBmaWxsPSIjODg4ODg4IiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMiIgeT0iOCIgd2lkdGg9IjUiIGhlaWdodD0iNDgiIHJ4PSIxLjUiIGZpbGw9IiNhYWFhYWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjMwIiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iI2NjY2NjYyIgb3BhY2l0eT0iMC44Ii8+PHJlY3QgeD0iMzgiIHk9IjgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0OCIgcng9IjMiIGZpbGw9IiMwMDdjYmEiLz48dGV4dCB4PSI0NCIgeT0iMjgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+KjwvdGV4dD48L3N2Zz4=">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
   <title>NoteWarp - редактор с автозаменами</title>
+<!-- <html-doctype] -->
+
+<!-- [styles> -->
 <style>
-/* === [СТИЛИ] Базовые стили === */
-/* @anchor:styles-base-start */
-/* @desc:Основные стили приложения */
+/* [styles-base> */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -33,11 +36,9 @@ body {
   max-width: 80%;
   margin: 0 auto;
 }
-/* @anchor:styles-base-end */
+/* <styles-base] */
 
-/* === [СТИЛИ] Заголовок === */
-/* @anchor:styles-header-start */
-/* @desc:Стили заголовка приложения с градиентным текстом */
+/* [styles-header> */
 .app-header {
   text-align: center;
   margin-bottom: 20px;
@@ -68,10 +69,9 @@ body {
   margin: 10px 0;
   opacity: 0.7;
 }
-/* @anchor:styles-header-end */
+/* <styles-header] */
 
-/* @anchor:styles-tabs-start */
-/* @desc:Стили вкладок и кнопок управления */
+/* [styles-tabs> */
 .tabs {
   margin-bottom: 20px;
   display: flex;
@@ -108,22 +108,18 @@ body {
 .settings-button:hover, .help-button:hover {
   background-color: #5a6268;
 }
-/* @anchor:styles-tabs-end */
+/* <styles-tabs] -->
 
-/* === [СТИЛИ] Вкладки контент === */
-/* @anchor:styles-tab-content-start */
-/* @desc:Отображение вкладок редактора, словаря и модулей */
+/* [styles-tab-content> */
 #editor-tab, #dictionary-tab, #modules-tab {
   display: none;
 }
 #editor-tab.active, #dictionary-tab.active, #modules-tab.active {
   display: block;
 }
-/* @anchor:styles-tab-content-end */
+/* <styles-tab-content] -->
 
-/* === [СТИЛИ] Редактор === */
-/* @anchor:styles-editor-start */
-/* @desc:Стили текстового поля редактора */
+/* [styles-editor> */
 #editor {
   width: 100%;
   height: 60vh;
@@ -140,11 +136,9 @@ body {
 #editor:focus {
   border-color: #007cba;
 }
-/* @anchor:styles-editor-end */
+/* <styles-editor] -->
 
-/* === [СТИЛИ] Панель инструментов === */
-/* @anchor:styles-tools-panel-start */
-/* @desc:Стили панели с кнопками действий */
+/* [styles-tools-panel> */
 .tools-panel {
   margin-top: 10px;
   padding: 8px;
@@ -167,11 +161,9 @@ body {
 .tool-btn:hover {
   background-color: #138496;
 }
-/* @anchor:styles-tools-panel-end */
+/* <styles-tools-panel] -->
 
-/* === [СТИЛИ] Индикатор проблем === */
-/* @anchor:styles-problems-indicator-start */
-/* @desc:Стили индикатора проблем с маркерами */
+/* [styles-problems-indicator> */
 .problems-indicator {
   margin-left: auto;
   padding: 4px 12px;
@@ -187,11 +179,9 @@ body {
 .problems-indicator:hover {
   background-color: #c82333;
 }
-/* @anchor:styles-problems-indicator-end */
+/* <styles-problems-indicator] -->
 
-/* === [СТИЛИ] Панель сохранения === */
-/* @anchor:styles-save-panel-start */
-/* @desc:Стили панели сохранения файла */
+/* [styles-save-panel> */
 .save-panel {
   margin-top: 10px;
   padding: 10px;
@@ -232,11 +222,9 @@ body {
   margin-top: 5px;
   display: none;
 }
-/* @anchor:styles-save-panel-end */
+/* <styles-save-panel] -->
 
-/* === [СТИЛИ] Словари === */
-/* @anchor:styles-dictionary-start */
-/* @desc:Стили менеджера словарей */
+/* [styles-dictionary> */
 .dictionary-manager {
   display: block;
 }
@@ -381,11 +369,9 @@ body {
   font-size: 12px;
   display: none;
 }
-/* @anchor:styles-dictionary-end */
+/* <styles-dictionary] -->
 
-/* === [СТИЛИ] Модули === */
-/* @anchor:styles-modules-start */
-/* @desc:Стили менеджера модулей */
+/* [styles-modules> */
 .modules-manager {
   display: block;
 }
@@ -465,11 +451,9 @@ body {
   word-break: break-word;
   margin: 5px 0;
 }
-/* @anchor:styles-modules-end */
+/* <styles-modules] -->
 
-/* === [СТИЛИ] Попапы === */
-/* @anchor:styles-popups-start */
-/* @desc:Стили всплывающих окон */
+/* [styles-popups> */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -491,11 +475,9 @@ body {
   max-height: 80vh;
   overflow-y: auto;
 }
-/* @anchor:styles-popups-end */
+/* <styles-popups] -->
 
-/* === [СТИЛИ] Настройки === */
-/* @anchor:styles-settings-start */
-/* @desc:Стили панели настроек */
+/* [styles-settings> */
 .settings-group {
   margin-bottom: 20px;
   padding: 15px;
@@ -556,11 +538,9 @@ body {
   cursor: pointer;
   margin-top: 10px;
 }
-/* @anchor:styles-settings-end */
+/* <styles-settings] -->
 
-/* === [СТИЛИ] Справка === */
-/* @anchor:styles-help-start */
-/* @desc:Стили окна справки */
+/* [styles-help> */
 .help-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -669,11 +649,9 @@ body {
   margin-top: 15px;
   flex-shrink: 0;
 }
-/* @anchor:styles-help-end */
+/* <styles-help] -->
 
-/* === [СТИЛИ] Мобильная адаптация === */
-/* @anchor:styles-mobile-start */
-/* @desc:Адаптивные стили для мобильных устройств */
+/* [styles-mobile> */
 @media (max-width: 768px) {
   body { max-width: 95%; padding: 10px; }
   .app-title { font-size: 2em; }
@@ -695,10 +673,9 @@ body {
   .help-tabs { flex-wrap: nowrap; overflow-x: auto; }
   .help-tab { flex: 0 0 auto; }
 }
-/* @anchor:styles-mobile-end */
+/* <styles-mobile] -->
 
-/* @anchor:styles-module-editor-start */
-/* @desc:Стили редактора кода модулей */
+/* [styles-module-editor> */
 .module-description {
   background-color: white;
   border-radius: 5px;
@@ -723,23 +700,20 @@ body {
   border-color: #007cba;
   outline: none;
 }
-/* @anchor:styles-module-editor-end */
+/* <styles-module-editor] -->
 </style>
-</head>
-<body>
+<!-- <styles] -->
 
-<!-- === [HTML] Заголовок === -->
-<!-- @anchor:html-header-start -->
+<!-- [html-header> -->
 <div class="app-header">
   <div class="app-title-wrapper">
     <div class="app-title" id="animated-title">NoteWarp</div>
-    <div class="app-version" id="title-version">1.8.0</div>
+    <div class="app-version" id="title-version">1.8.4</div>
   </div>
 </div>
-<!-- @anchor:html-header-end -->
+<!-- <html-header] -->
 
-<!-- @anchor:html-tabs-start -->
-<!-- @desc:Панель вкладок и кнопок управления -->
+<!-- [html-tabs> -->
 <div class="tabs">
   <div class="tab-buttons-container">
     <button class="tab-button active" data-tab="editor-tab">Редактор</button>
@@ -751,16 +725,13 @@ body {
     <button class="help-button" id="help-button">[?]</button>
   </div>
 </div>
-<!-- @anchor:html-tabs-end -->
+<!-- <html-tabs] -->
 
-<!-- === [HTML] Вкладка Редактор === -->
-<!-- @anchor:html-editor-tab-start -->
-<!-- @desc:Вкладка с текстовым редактором -->
+<!-- [html-editor-tab> -->
 <div id="editor-tab" class="active">
   <textarea id="editor" style="width:100%; height:400px; font-family: 'Courier New', monospace; font-size: 14px;"></textarea>
   
-  <!-- @anchor:html-tools-panel-start -->
-  <!-- @desc:Панель инструментов редактора -->
+  <!-- [html-tools-panel> -->
   <div class="tools-panel">
     <button id="scan-replace-btn" class="tool-btn" title="Заменить всё (Ctrl+M)">🔄 Заменить всё</button>
     <button id="resolve-references-btn" class="tool-btn" title="Развернуть ссылки (Ctrl+R)">🔗 Развернуть ссылки</button>
@@ -768,10 +739,9 @@ body {
       ⚠️ <span id="problem-count">0</span>
     </span>
   </div>
-  <!-- @anchor:html-tools-panel-end -->
+  <!-- <html-tools-panel] -->
   
-  <!-- @anchor:html-save-panel-start -->
-  <!-- @desc:Панель сохранения файла -->
+  <!-- [html-save-panel> -->
   <div class="save-panel">
     <div class="save-controls">
       <input type="text" class="filename-input" id="filename-input" placeholder="Введите имя файла (без расширения)">
@@ -779,14 +749,11 @@ body {
     </div>
     <div class="filename-error" id="filename-error"></div>
   </div>
-  <!-- @anchor:html-save-panel-end -->
+  <!-- <html-save-panel] -->
 </div>
-<!-- @anchor:html-editor-tab-end -->
+<!-- <html-editor-tab] -->
 
-<!-- === [HTML] Вкладка Словарь === -->
-<!-- @anchor:html-dictionary-tab-start -->
-<!-- @desc:Вкладка управления словарями сокращений -->
-<div id="dictionary-tab">
+<!-- [html-dictionary-tab> --><div id="dictionary-tab">
   <div class="dictionary-manager">
     <div class="shortcuts-list">
       <div class="dictionary-panel">
@@ -798,13 +765,13 @@ body {
           </table>
           <div id="conflict-status" class="conflict-status"></div>
         </div>
-        <div class="drop-zone" id="dict-drop-zone">Перетащите файл словаря (TXT) сюда</div>
+        <div class="drop-zone" id="dict-drop-zone">Перетащите файл словаря (TXT) или кликните для создания нового</div>
       </div>
       <div class="editing-dict-panel">
         <h3 id="editing-dict-title">Редактирование словаря</h3>
         <div class="shortcut-table-container">
           <table class="shortcut-table">
-            <thead><tr><th>Сокращение</th><th>Подстановка</th></tr></thead>
+            <thead><tr><th>Сокращение</th><th>Подстановка</th><tr></thead>
             <tbody id="shortcuts-table-body"></tbody>
           </table>
         </div>
@@ -828,12 +795,9 @@ body {
       </div>
     </div>
   </div>
-</div>
-<!-- @anchor:html-dictionary-tab-end -->
+</div><!-- <html-dictionary-tab] -->
 
-<!-- === [HTML] Вкладка Модули === -->
-<!-- @anchor:html-modules-tab-start -->
-<!-- @desc:Вкладка управления модулями расширения -->
+<!-- [html-modules-tab> -->
 <div id="modules-tab">
   <div class="dictionary-manager">
     <div class="shortcuts-list">
@@ -885,17 +849,14 @@ body {
     </div>
   </div>
 </div>
-<!-- @anchor:html-modules-tab-end -->
+<!-- <html-modules-tab] -->
 
-<!-- === [HTML] Попап Настройки === -->
-<!-- @anchor:html-settings-popup-start -->
-<!-- @desc:Всплывающее окно настроек -->
+<!-- [html-settings-popup> -->
 <div id="settings-popup" class="popup-overlay" style="display:none;">
   <div class="popup-content">
     <h3>Настройки</h3>
     
-    <!-- @anchor:html-settings-editor-start -->
-    <!-- @desc:Настройки редактора -->
+    <!-- [html-settings-editor> -->
     <div class="settings-group">
       <h4>Редактор</h4>
       <div class="setting-item">
@@ -903,10 +864,9 @@ body {
         <label for="word-wrap-checkbox">Переносить длинные строки (по словам)</label>
       </div>
     </div>
-    <!-- @anchor:html-settings-editor-end -->
+    <!-- <html-settings-editor] -->
     
-    <!-- @anchor:html-settings-navigation-start -->
-    <!-- @desc:Настройка символа для быстрого перехода (Alt+X) -->
+    <!-- [html-settings-navigation> -->
     <div class="settings-group">
       <h4>Навигация</h4>
       <div class="setting-item" style="align-items: center;">
@@ -915,10 +875,9 @@ body {
         <span style="margin-left: 8px; color: #6c757d; font-size: 13px;">Alt+X — перейти к символу</span>
       </div>
     </div>
-    <!-- @anchor:html-settings-navigation-end -->
+    <!-- <html-settings-navigation] -->
     
-    <!-- @anchor:html-settings-feedback-start -->
-    <!-- @desc:Настройки обратной связи -->
+    <!-- [html-settings-feedback> -->
     <div class="settings-group">
       <h4>Обратная связь</h4>
       <div class="setting-item">
@@ -930,27 +889,24 @@ body {
         <label for="feedback-visual-checkbox">Визуальный эффект (мигание фона)</label>
       </div>
     </div>
-    <!-- @anchor:html-settings-feedback-end -->
+    <!-- <html-settings-feedback] -->
     
     <button id="close-settings-btn">Готово</button>
   </div>
 </div>
-<!-- @anchor:html-settings-popup-end -->
+<!-- <html-settings-popup] -->
 
-<!-- === [HTML] Попап Справка === -->
-<!-- @anchor:html-help-popup-start -->
-<!-- @desc:Всплывающее окно справки -->
-<div id="help-popup" class="popup-overlay" style="display:none;">
+<!-- [html-help-popup> --><div id="help-popup" class="popup-overlay" style="display:none;">
   <div class="popup-content help-popup">
     <div class="help-tabs">
       <button class="help-tab active" data-tab="help-editor">📝 Редактор</button>
       <button class="help-tab" data-tab="help-dictionary">📚 Словарь</button>
+      <button class="help-tab" data-tab="help-templates">📋 Шаблоны</button>
       <button class="help-tab" data-tab="help-modules">🧩 Модули</button>
       <button class="help-tab" data-tab="help-about">ℹ️ О программе</button>
     </div>
 
-    <!-- @anchor:html-help-editor-start -->
-    <!-- @desc:Справка по редактору -->
+    <!-- [html-help-editor> -->
     <div class="help-tab-content active" id="help-editor-tab">
       <div class="help-section">
         <p>Основное окно для работы с текстом.</p>
@@ -971,80 +927,87 @@ body {
         </table>
       </div>
     </div>
-    <!-- @anchor:html-help-editor-end -->
+    <!-- <html-help-editor] -->
     
-    <!-- @anchor:html-help-dictionary-start -->
-    <!-- @desc:Справка по словарям -->
+    <!-- [html-help-dictionary> -->
     <div class="help-tab-content" id="help-dictionary-tab">
       <div class="help-section">
-        <p>Словари содержат сокращения и их подстановки.</p>
-        <h4>Добавление нового словаря</h4>
-        <p>Создайте текстовый файл .txt с содержимым <code>{}</code>, переименуйте подходящим именем и перетащите в зону импорта.</p>
+        <h4>Создание словаря</h4>
+        <p>Кликните по зоне импорта внизу панели словарей и введите имя. Словарь создастся пустым и сразу активируется.</p>
         <h4>Добавление сокращения</h4>
-        <p>Выберите словарь для редактирования в левой панели. Введите сокращение и подстановку в правой панели, нажмите <strong>Сохранить</strong>.</p>
-        <h4>Добавление меток быстрого перехода</h4>
-        <p>Расставьте в шаблоне символы <code>*</code> в местах ввода значений. Если вам часто нужно редактировать, удалять или дополнять определённые разделы текста, заключите их в <code>[1> такие нумерованные метки <1]</code>.</p>
-        <h4>Добавление ссылок</h4>
-        <p> <code>[1> Текст <1]</code> можно дублировать сразу в нескольких местах - расставьте ссылки <code>[[1]]</code> на соответствующий нумерованный раздел. </p>
-        <h4>Динамические теги даты и времени</h4>
-        <p>Используйте их в подстановке, чтобы вставить текущие дату и время:</p>
-        <table class="shortcuts-table">
-          <thead><tr><th>Тег</th><th>Пример значения</th></tr></thead>
-          <tbody>
-            <tr><td><code>[дата]</code></td><td>14.02.2026</td></tr>
-            <tr><td><code>[дата_iso]</code></td><td>2026-02-14</td></tr>
-            <tr><td><code>[время]</code></td><td>14:30</td></tr>
-            <tr><td><code>[время_iso]</code></td><td>14:30:22</td></tr>
-          </tbody>
-        </table>
-        <h4>Конфликты сокращений</h4>
-        <p>Если одно сокращение есть в нескольких активных словарях, оно не будет работать. Статус конфликтов отображается жёлтой полосой.</p>
+        <p>Выберите словарь в таблице слева. В правой панели введите сокращение и подстановку, нажмите <strong>Сохранить</strong>.</p>
+        <h4>Импорт/экспорт</h4>
+        <p>Словари хранятся как JSON. Перетащите <code>.txt</code> файл в зону импорта для добавления. Кнопка «Экспорт» сохраняет словарь в файл.</p>
+        <h4>Конфликты</h4>
+        <p>Если одно сокращение есть в нескольких активных словарях — оно не сработает. Статус конфликтов отображается жёлтой полосой.</p>
       </div>
     </div>
-    <!-- @anchor:html-help-dictionary-end -->
+    <!-- <html-help-dictionary] -->
     
-    <!-- @anchor:html-help-modules-start -->
+    <!-- [html-help-templates> -->
+    <div class="help-tab-content" id="help-templates-tab">
+      <div class="help-section">
+        <h4>Метки быстрого перехода (<code>*</code>)</h4>
+        <p>Расставьте в подстановке символы <code>*</code> в местах, где нужно быстро вводить значения. После замены нажмите <kbd>Alt+X</kbd> для перехода между ними.</p>
+        <p>Удобно для последовательных заполнений — например, обязательных измерений в медкарте: давление, пульс, температура.</p>
+        <h4>Нумерованные метки (<code>[1>...<1]</code>)</h4>
+        <p>Заключайте в метки блоки текста, которые нужно часто редактировать, дополнять или переписывать. Переход: <kbd>Ctrl+1…9</kbd> (курсор в конец), <kbd>Ctrl+Alt+1…9</kbd> (выделить содержимое).</p>
+        <p>Совет: организуйте метки по аналогии с цифровой клавиатурой. Например, <code>1-4-7</code> — одна сторона (проксимально → середина → дистально), <code>3-6-9</code> — другая. Зависит от вашего воркфлоу.</p>
+        <h4>Двухпроходные шаблоны</h4>
+        <p>Маленькое сокращение-рыба быстро модифицируется на первом проходе, затем разворачивается в большой шаблон из пачки мелких сокращений, готовый к финишному заполнению.</p>
+        <p>Пример:</p>
+        <pre class="syntax-code">// Сокращение "рыба\":
+[курсор] [1>Осмотр<1] [2>Жалобы<2]
+
+// После первого прохода (ввели данные):
+Осмотр терапевта
+Жалобы на боль в спине
+
+// Затем Ctrl+M разворачает в большой шаблон:
+[курсор] 📋 МЕДИЦИНСКАЯ КАРТА
+Дата: [дата]
+
+Осмотр: Осмотр терапевта
+Жалобы: Жалобы на боль в спине
+
+Анамнез: *
+Объективно: *
+Диагноз: *
+Лечение: *</pre>
+        <p>Так можно строить шаблоны любой сложности — от простых форм до разветвлённых структур.</p>
+      </div>
+    </div>
+    <!-- <html-help-templates] -->
+
+    <!-- [html-help-modules> -->
     <div class="help-tab-content" id="help-modules-tab">
       <div class="help-section">
-        <h3>🧩 Возможности модулей</h3>
-        <div class="help-card">
-          <p>Модули расширяют функциональность редактора. Они могут:</p>
-          <ul>
-            <li>📝 <strong>Обрабатывать текст</strong> — автоматически изменять содержимое при вводе или по команде</li>
-            <li>📚 <strong>Управлять словарями</strong> — добавлять сокращения и автозамены для специфичных задач</li>
-            <li>⌨️ <strong>Добавлять горячие клавиши</strong> — свои комбинации для быстрых действий</li>
-            <li>🔧 <strong>Создавать кнопки</strong> — на панели инструментов для вызова функций модуля</li>
-            <li>💬 <strong>Показывать подсказки</strong> — выводить сообщения пользователю</li>
-          </ul>
-        </div>
-        <div class="help-card">
-          <h4>Установка модуля</h4>
-          <p>Перетащите <code>.js</code> файл в зону импорта на вкладке «Модули». Модуль появится в списке — включите его галочкой.</p>
-        </div>
-        <div class="help-card">
-          <h4>Управление модулями</h4>
-          <ul>
-            <li>✅ <strong>Включение/выключение</strong> — галочкой в списке, без удаления</li>
-            <li>📦 <strong>Экспорт</strong> — кнопка «Экспорт» сохранит модуль как <code>.js</code> файл</li>
-            <li>✏️ <strong>Редактирование</strong> — выберите модуль, измените код в правой панели, нажмите «Сохранить»</li>
-            <li>🗑️ <strong>Удаление</strong> — кнопка «Удалить» уберёт модуль полностью</li>
-          </ul>
-        </div>
-        <div class="help-card">
-          <h4>Где брать модули?</h4>
-          <p>Модули можно найти в репозитории проекта на GitHub или создать самостоятельно. Для создания модуля достаточно базовых знаний JavaScript.</p>
-        </div>
+        <p>Модули расширяют функциональность редактора.</p>
+        <h4>Установка модуля</h4>
+        <p>Перетащите <code>.js</code> файл в зону импорта на вкладке «Модули».</p>
+        <h4>Структура модуля</h4>
+        <pre class="syntax-code">const MyModule = {
+  id: "my-module",
+  name: "Название модуля",
+  version: "1.0",
+  description: "Что делает модуль",
+  process(text, cursorPos, api) {
+    // Обработка текста
+    return { text, cursorPos };
+  }
+};
+for (let key in MyModule) exports[key] = MyModule[key];</pre>
       </div>
     </div>
-    <!-- @anchor:html-help-modules-end -->
+    <!-- <html-help-modules] -->
     
-    <!-- @anchor:html-help-about-start -->
+    <!-- [html-help-about> -->
     <div class="help-tab-content" id="help-about-tab">
       <div class="help-section">
         <div style="text-align: center; margin: 20px 0;">
-          <div style="font-size: 48px; opacity: 0.8;">📝⚡</div>
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyYzJjMmMiLz48cmVjdCB4PSI2IiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iIzY2NjY2NiIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMTQiIHk9IjgiIHdpZHRoPSI1IiBoZWlnaHQ9IjQ4IiByeD0iMS41IiBmaWxsPSIjODg4ODg4IiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMiIgeT0iOCIgd2lkdGg9IjUiIGhlaWdodD0iNDgiIHJ4PSIxLjUiIGZpbGw9IiNhYWFhYWEiIG9wYWNpdHk9IjAuNyIvPjxyZWN0IHg9IjMwIiB5PSI4IiB3aWR0aD0iNSIgaGVpZ2h0PSI0OCIgcng9IjEuNSIgZmlsbD0iI2NjY2NjYyIgb3BhY2l0eT0iMC44Ii8+PHJlY3QgeD0iMzgiIHk9IjgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0OCIgcng9IjMiIGZpbGw9IiMwMDdjYmEiLz48dGV4dCB4PSI0NCIgeT0iMjgiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+KjwvdGV4dD48L3N2Zz4=" alt="NoteWarp" style="width:64px; height:64px; margin-bottom:12px;">
           <div style="font-size: 24px; font-weight: bold; color: #007cba;">NoteWarp</div>
-          <div style="color: #6c757d;">Версия 1.8.0 (май 2026)</div>
+          <div style="color: #6c757d;">Версия 1.8.4 (июль 2026)</div>
         </div>
         <div class="help-card">
           <p>Локальный браузерный редактор для быстрого создания шаблонных текстов.</p>
@@ -1085,83 +1048,77 @@ body {
         </div>
       </div>
     </div>
-    <!-- @anchor:html-help-about-end -->
+    <!-- <html-help-about] -->
     
     <button id="close-help-btn">Закрыть</button>
   </div>
-</div>
-<!-- @anchor:html-help-popup-end -->
+</div><!-- <html-help-popup] -->
 
+<!-- [scripts> -->
 <script>
-// === [JS] Утилиты DOM ===
-// @anchor:class-domutils-start
-// @desc:Вспомогательные методы для работы с DOM
+// [class-domutils>
 class DOMUtils {
-  // @anchor:domutils-showerror-start
-  // @desc:Отображает сообщение об ошибке в элементе
   static showError(element, message) {
     element.textContent = message;
     element.style.display = 'block';
   }
-  // @anchor:domutils-showerror-end
-  
-  // @anchor:domutils-clearerror-start
-  // @desc:Скрывает сообщение об ошибке
   static clearError(element) {
     element.style.display = 'none';
   }
-  // @anchor:domutils-clearerror-end
-  
-  // @anchor:domutils-createtaginputpopup-start
-  // @desc:Создаёт всплывающее окно для ввода имени маркера
-  static createTagInputPopup(callback) {
+  static validateFilename(name) {
+    if (!name || !name.trim()) return { valid: false, error: 'Имя не может быть пустым' };
+    const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
+    if (invalidChars.test(name)) return { valid: false, error: 'Недопустимые символы: <>:"/\\|?*' };
+    if (name.length > 255) return { valid: false, error: 'Имя слишком длинное (макс. 255)' };
+    return { valid: true, error: null };
+  }
+  static createTagInputPopup(callback, options = {}) {
+    const allowSpaces = options.allowSpaces === true;
+    const placeholder = options.placeholder || 'Имя';
+    const title = options.title || 'Введите имя';
     const overlay = document.createElement('div');
     overlay.className = 'popup-overlay';
     overlay.innerHTML = `
       <div class="popup-content">
-        <h3>Введите имя маркера</h3>
-        <input type="text" id="tag-input" placeholder="Имя маркера">
-        <button id="popup-ok-btn">Ок</button>
-        <button id="popup-cancel-btn">Отмена</button>
+        <h3>${title}</h3>
+        <input type="text" id="tag-input" placeholder="${placeholder}">
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+          ${allowSpaces ? 'Пробелы допустимы. Недопустимы: <>:"/\\|?*' : 'Только латиница, цифры и дефисы (без пробелов).'}
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
+          <button id="popup-cancel-btn" style="padding: 6px 14px; background-color: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">Отмена</button>
+          <button id="popup-ok-btn" style="padding: 6px 14px; background-color: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer;">Ок</button>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
     const input = document.getElementById('tag-input');
     const okBtn = document.getElementById('popup-ok-btn');
     const cancelBtn = document.getElementById('popup-cancel-btn');
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const name = input.value.trim();
-        if (name.includes(' ')) { alert('Имя маркера не должно содержать пробелы.'); return; }
-        if (name) callback(name);
-        document.body.removeChild(overlay);
-        document.getElementById('editor').focus();
-      }
-    });
-    okBtn.addEventListener('click', () => {
+    const submit = () => {
       const name = input.value.trim();
-      if (name.includes(' ')) { alert('Имя маркера не должно содержать пробелы.'); return; }
-      if (name) callback(name);
+      if (!name) { alert('Имя не может быть пустым'); input.focus(); return; }
+      if (!allowSpaces && name.includes(' ')) { alert('Пробелы недопустимы'); input.focus(); return; }
+      callback(name);
       document.body.removeChild(overlay);
       document.getElementById('editor').focus();
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      if (e.key === 'Escape') { document.body.removeChild(overlay); document.getElementById('editor').focus(); }
     });
+    okBtn.addEventListener('click', submit);
     cancelBtn.addEventListener('click', () => {
       document.body.removeChild(overlay);
       document.getElementById('editor').focus();
     });
     input.focus();
   }
-  // @anchor:domutils-createtaginputpopup-end
 }
-// @anchor:class-domutils-end
+// <class-domutils]
 
-// === [JS] Менеджер обратной связи ===
-// @anchor:class-feedbackmanager-start
-// @desc:Управление звуковыми и визуальными эффектами
+// [class-feedbackmanager>
 class FeedbackManager {
-  // @anchor:feedbackmanager-constructor-start
-  // @desc:Инициализирует менеджер и загружает настройки
   constructor() {
     this.soundEnabled = false;
     this.visualEnabled = false;
@@ -1169,10 +1126,7 @@ class FeedbackManager {
     this.loadSettings();
     this.setupUI();
   }
-  // @anchor:feedbackmanager-constructor-end
   
-  // @anchor:feedbackmanager-setupui-start
-  // @desc:Привязывает чекбоксы настроек к свойствам
   setupUI() {
     const soundCheckbox = document.getElementById('feedback-sound-checkbox');
     const visualCheckbox = document.getElementById('feedback-visual-checkbox');
@@ -1183,34 +1137,22 @@ class FeedbackManager {
       visualCheckbox.addEventListener('change', (e) => { this.visualEnabled = e.target.checked; this.saveSettings(); });
     }
   }
-  // @anchor:feedbackmanager-setupui-end
   
-  // @anchor:feedbackmanager-loadsettings-start
-  // @desc:Загружает настройки обратной связи из localStorage
   loadSettings() {
     const saved = localStorage.getItem('noteWarpFeedbackSettings');
     if (saved) {
       try { const settings = JSON.parse(saved); this.soundEnabled = settings.sound || false; this.visualEnabled = settings.visual || false; } catch(e) {}
     }
   }
-  // @anchor:feedbackmanager-loadsettings-end
   
-  // @anchor:feedbackmanager-savesettings-start
-  // @desc:Сохраняет настройки обратной связи в localStorage
   saveSettings() {
     localStorage.setItem('noteWarpFeedbackSettings', JSON.stringify({ sound: this.soundEnabled, visual: this.visualEnabled }));
   }
-  // @anchor:feedbackmanager-savesettings-end
   
-  // @anchor:feedbackmanager-initaudio-start
-  // @desc:Инициализирует аудиоконтекст для звуковых сигналов
   initAudio() {
     if (!this.audioContext) this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
-  // @anchor:feedbackmanager-initaudio-end
   
-  // @anchor:feedbackmanager-playsound-start
-  // @desc:Воспроизводит короткий звуковой сигнал
   playSound() {
     this.initAudio();
     const ctx = this.audioContext;
@@ -1230,34 +1172,23 @@ class FeedbackManager {
     oscillator.start(now);
     oscillator.stop(now + duration + 0.02);
   }
-  // @anchor:feedbackmanager-playsound-end
   
-  // @anchor:feedbackmanager-triggerwarp-start
-  // @desc:Создаёт визуальный эффект мигания фона
   triggerWarp() {
     const body = document.body;
     const originalBg = getComputedStyle(body).backgroundColor || '#ffffff';
     body.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
     setTimeout(() => { body.style.backgroundColor = originalBg; }, 100);
   }
-  // @anchor:feedbackmanager-triggerwarp-end
   
-  // @anchor:feedbackmanager-triggerfeedback-start
-  // @desc:Вызывает обратную связь согласно настройкам
   triggerFeedback() {
     if (this.soundEnabled) this.playSound();
     if (this.visualEnabled) this.triggerWarp();
   }
-  // @anchor:feedbackmanager-triggerfeedback-end
 }
-// @anchor:class-feedbackmanager-end
+// <class-feedbackmanager]
 
-// === [JS] Утилиты даты и времени ===
-// @anchor:class-datetimeutils-start
-// @desc:Замена тегов даты и времени в тексте
+// [class-datetimeutils>
 class DateTimeUtils {
-  // @anchor:datetimeutils-replacedatetimetags-start
-  // @desc:Заменяет теги [дата], [время] и др. на актуальные значения
   static replaceDateTimeTags(text) {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -1272,68 +1203,42 @@ class DateTimeUtils {
       .replace(/\[дата_время\]/g, `${dateISO} ${hours}:${minutes}`)
       .replace(/\[дата_время_лок\]/g, `${now.toLocaleDateString()}, ${hours}:${minutes}:${seconds}`);
   }
-  // @anchor:datetimeutils-replacedatetimetags-end
 }
-// @anchor:class-datetimeutils-end
+// <class-datetimeutils]
 
-// === [JS] Менеджер истории ===
-// @anchor:class-historymanager-start
-// @desc:Управление историей изменений (undo/redo)
+// [class-historymanager>
 class HistoryManager {
-  // @anchor:historymanager-constructor-start
-  // @desc:Инициализирует менеджер истории с ограничением размера
   constructor(maxSize = 100) {
     this.history = [];
     this.index = -1;
     this.maxSize = maxSize;
   }
-  // @anchor:historymanager-constructor-end
   
-  // @anchor:historymanager-pushstate-start
-  // @desc:Добавляет новое состояние в историю
   pushState(state) {
     if (this.index < this.history.length - 1) this.history = this.history.slice(0, this.index + 1);
     this.history.push(state);
     this.index++;
     if (this.history.length > this.maxSize) { this.history.shift(); this.index--; }
   }
-  // @anchor:historymanager-pushstate-end
   
-  // @anchor:historymanager-undo-start
-  // @desc:Возвращает предыдущее состояние
   undo() { if (this.index > 0) return this.history[--this.index]; return null; }
-  // @anchor:historymanager-undo-end
-  
-  // @anchor:historymanager-redo-start
-  // @desc:Возвращает следующее состояние
   redo() { if (this.index < this.history.length - 1) return this.history[++this.index]; return null; }
-  // @anchor:historymanager-redo-end
 }
-// @anchor:class-historymanager-end
+// <class-historymanager]
 
-// === [JS] Автозамена ===
-// @anchor:class-autoreplacer-start
-// @desc:Автоматическая замена сокращений при вводе
+// [class-autoreplacer>
 class AutoReplacer {
-  // @anchor:autoreplacer-constructor-start
-  // @desc:Инициализирует автозамену с привязкой к менеджеру словарей
   constructor(dictionaryManager, maxBufferSize = 50) {
     this.dictionaryManager = dictionaryManager;
     this.maxBufferSize = maxBufferSize;
   }
-  // @anchor:autoreplacer-constructor-end
   
-  // @anchor:autoreplacer-updatebuffer-start
-  // @desc:Обновляет буфер ввода, ограничивая его длину
   updateBuffer(buffer, text) {
     buffer += text;
     if (buffer.length > this.maxBufferSize) buffer = buffer.slice(-this.maxBufferSize);
     return buffer;
   }
-  // @anchor:autoreplacer-updatebuffer-end
   
-  // @anchor:autoreplacer-checkandreplace-start
-  // @desc:Проверяет буфер на совпадение с сокращениями и вызывает замену
   checkAndReplace(buffer, element, insertCallback) {
     const dictionary = this.dictionaryManager.getActiveDictionary();
     const sortedKeys = Object.keys(dictionary).sort((a, b) => b.length - a.length);
@@ -1345,33 +1250,22 @@ class AutoReplacer {
     }
     return false;
   }
-  // @anchor:autoreplacer-checkandreplace-end
 }
-// @anchor:class-autoreplacer-end
+// <class-autoreplacer]
 
-// === [JS] Валидатор маркеров ===
-// @anchor:class-markervalidator-start
-// @desc:Проверка корректности маркеров [n> и <n]
+// [class-markervalidator>
 class MarkerValidator {
-  // @anchor:markervalidator-constructor-start
-  // @desc:Инициализирует валидатор с привязкой к редактору
   constructor(editor) {
     this.editor = editor;
     this.problems = { duplicateDefinitions: [], undefinedReferences: [], orphanedMarkers: [] };
     this.debounceTimer = null;
   }
-  // @anchor:markervalidator-constructor-end
   
-  // @anchor:markervalidator-schedulevAlidation-start
-  // @desc:Планирует отложенную проверку маркеров
   scheduleValidation() {
     clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => this.validate(), 800);
   }
-  // @anchor:markervalidator-schedulevAlidation-end
   
-  // @anchor:markervalidator-validate-start
-  // @desc:Выполняет проверку маркеров и обновляет индикатор
   validate() {
     const content = this.editor.editor.value;
     this.problems = { duplicateDefinitions: [], undefinedReferences: [], orphanedMarkers: [] };
@@ -1396,10 +1290,7 @@ class MarkerValidator {
     if (openMarkers !== closeMarkers) this.problems.orphanedMarkers.push({ message: `Несоответствие: ${openMarkers} открытых, ${closeMarkers} закрытых` });
     this.updateUI();
   }
-  // @anchor:markervalidator-validate-end
   
-  // @anchor:markervalidator-updateui-start
-  // @desc:Обновляет индикатор проблем в интерфейсе
   updateUI() {
     const totalProblems = this.problems.duplicateDefinitions.length + this.problems.undefinedReferences.length;
     const indicator = document.getElementById('marker-problems-indicator');
@@ -1414,10 +1305,7 @@ class MarkerValidator {
       }
     }
   }
-  // @anchor:markervalidator-updateui-end
   
-  // @anchor:markervalidator-showproblemreport-start
-  // @desc:Показывает отчёт о найденных проблемах с маркерами
   showProblemReport() {
     if (this.problems.duplicateDefinitions.length === 0 && this.problems.undefinedReferences.length === 0 && this.problems.orphanedMarkers.length === 0) {
       this.editor.showHint('✅ Проблем не найдено', 2000);
@@ -1437,16 +1325,11 @@ class MarkerValidator {
     }
     alert(report);
   }
-  // @anchor:markervalidator-showproblemreport-end
 }
-// @anchor:class-markervalidator-end
+// <class-markervalidator]
 
-// === [JS] Система модулей ===
-// @anchor:class-modulemanager-start
-// @desc:Управление модулями расширения
+// [class-modulemanager>
 class ModuleManager {
-  // @anchor:modulemanager-constructor-start
-  // @desc:Инициализирует менеджер модулей и загружает сохранённые
   constructor(editor) {
     this.editor = editor;
     this.modules = new Map();
@@ -1458,10 +1341,7 @@ class ModuleManager {
     this.renderModulesList();
     this.setupEventListeners();
   }
-  // @anchor:modulemanager-constructor-end
 
-  // @anchor:modulemanager-addtoolbarbutton-start
-  // @desc:Добавляет кнопку модуля на панель инструментов
   addToolbarButton(moduleId, config) {
     if (this.moduleButtons.has(moduleId)) return;
     const panel = document.querySelector('.tools-panel');
@@ -1473,6 +1353,11 @@ class ModuleManager {
     btn.textContent = config.text;
     btn.className = 'tool-btn';
     btn.title = config.title || '';
+    
+    btn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+    
     btn.onclick = () => {
       const mod = this.modules.get(moduleId);
       if (mod && mod.enabled && config.onClick) {
@@ -1482,10 +1367,7 @@ class ModuleManager {
     panel.appendChild(btn);
     this.moduleButtons.set(moduleId, btn);
   }
-  // @anchor:modulemanager-addtoolbarbutton-end
 
-  // @anchor:modulemanager-removetoolbarbutton-start
-  // @desc:Удаляет кнопку модуля с панели инструментов
   removeToolbarButton(moduleId) {
     const btn = this.moduleButtons.get(moduleId);
     if (btn) {
@@ -1493,125 +1375,42 @@ class ModuleManager {
       this.moduleButtons.delete(moduleId);
     }
   }
-  // @anchor:modulemanager-removetoolbarbutton-end
 
-  // @anchor:modulemanager-enablemodule-start
-  // @desc:Включает модуль, вызывает его инициализацию и onEnable
   enableModule(id) {
     const mod = this.modules.get(id);
-    if (!mod || mod.enabled) {
-      console.log(`[ModuleManager] 🔄 enableModule: модуль ${id} уже включён или не найден`);
-      return;
-    }
-    
-    console.log(`[ModuleManager] 🟢 enableModule: включение модуля "${mod.name}" (${id})`);
-    console.log(`[ModuleManager] 📊 Состояние: enabled=${mod.enabled}, wasEverEnabled=${mod.wasEverEnabled || false}`);
-    console.log(`[ModuleManager] 📋 Методы: init=${!!mod.init}, onEnable=${!!mod.onEnable}, onDisable=${!!mod.onDisable}`);
-    
-    const wasEverEnabled = mod.wasEverEnabled || false;
+    if (!mod || mod.enabled) return;
     mod.enabled = true;
-    mod.wasEverEnabled = true;
-    
     this.saveToStorage();
     this.renderModulesList();
-    
     if (mod.toolbarButton) {
-      console.log(`[ModuleManager] 🔘 Добавление кнопки для модуля "${mod.name}"`);
       this.addToolbarButton(id, mod.toolbarButton);
     }
-    
-    if (!wasEverEnabled && mod.init) {
-      console.log(`[ModuleManager] 🚀 Вызов init() для модуля "${mod.name}" (первый запуск)`);
-      try {
-        const api = this.createModuleAPI(id);
-        console.log(`[ModuleManager] 🔧 API создан, методы словарей: registerDictionary=${!!api.registerDictionary}`);
-        mod.init(api);
-        console.log(`[ModuleManager] ✅ init() выполнен успешно`);
-      } catch (err) {
-        console.error(`[ModuleManager] ❌ Ошибка init модуля ${id}:`, err);
-        this.editor.showHint(`⚠️ Ошибка при инициализации модуля "${mod.name}"`, 3000);
-      }
-    } else {
-      console.log(`[ModuleManager] ⏭️ Пропуск init(): wasEverEnabled=${wasEverEnabled}, hasInit=${!!mod.init}`);
-    }
-    
     if (mod.onEnable) {
-      console.log(`[ModuleManager] 🔄 Вызов onEnable() для модуля "${mod.name}"`);
       try {
-        const api = this.createModuleAPI(id);
-        mod.onEnable(api);
-        console.log(`[ModuleManager] ✅ onEnable() выполнен успешно`);
+        mod.onEnable(this.createModuleAPI(id));
       } catch (err) {
-        console.error(`[ModuleManager] ❌ Ошибка onEnable модуля ${id}:`, err);
+        console.error(`Ошибка onEnable модуля ${id}:`, err);
         this.editor.showHint(`⚠️ Ошибка при включении модуля "${mod.name}"`, 3000);
       }
     }
-    
-    console.log(`[ModuleManager] 📚 Активные словари после включения:`, 
-      Array.from(this.editor.dictionaryManager.activeDictionaries));
-    console.log(`[ModuleManager] 📖 Все словари:`, Object.keys(this.editor.dictionaryManager.dictionaries));
   }
-  // @anchor:modulemanager-enablemodule-end
 
-  // @anchor:modulemanager-disablemodule-start
-  // @desc:Отключает модуль, очищает его словари и кнопки
   disableModule(id) {
     const mod = this.modules.get(id);
-    if (!mod || !mod.enabled) {
-      console.log(`[ModuleManager] 🔄 disableModule: модуль ${id} уже выключен или не найден`);
-      return;
-    }
-    
-    console.log(`[ModuleManager] 🔴 disableModule: отключение модуля "${mod.name}" (${id})`);
-    
+    if (!mod || !mod.enabled) return;
     mod.enabled = false;
     this.saveToStorage();
     this.renderModulesList();
     this.removeToolbarButton(id);
-    
-    const dictPrefix = id + '-';
-    const dictsToRemove = [];
-    for (let dictName in this.editor.dictionaryManager.dictionaries) {
-      if (dictName.startsWith(dictPrefix) || dictName === id + '_dict') {
-        dictsToRemove.push(dictName);
-      }
-    }
-    
-    if (dictsToRemove.length > 0) {
-      console.log(`[ModuleManager] 🗑️ Удаление словарей модуля: ${dictsToRemove.join(', ')}`);
-      for (let dictName of dictsToRemove) {
-        delete this.editor.dictionaryManager.dictionaries[dictName];
-        this.editor.dictionaryManager.activeDictionaries.delete(dictName);
-      }
-      this.editor.dictionaryManager.saveDictionaries();
-      this.editor.dictionaryManager.saveActiveDictionaries();
-      this.editor.dictionaryManager.rebuildActiveDictionary();
-      this.editor.dictionaryManager.checkConflicts();
-      this.editor.dictionaryManager.renderShortcutsTable();
-      this.editor.dictionaryManager.renderDictionariesList();
-      this.editor.dictionaryManager.updateConflictStatus();
-      console.log(`[ModuleManager] ✅ Словари модуля "${id}" очищены`);
-    } else {
-      console.log(`[ModuleManager] ℹ️ У модуля "${id}" нет зарегистрированных словарей для очистки`);
-    }
-    
     if (mod.onDisable) {
-      console.log(`[ModuleManager] 🔄 Вызов onDisable() для модуля "${mod.name}"`);
       try {
         mod.onDisable(this.createModuleAPI(id));
-        console.log(`[ModuleManager] ✅ onDisable() выполнен успешно`);
       } catch (err) {
-        console.error(`[ModuleManager] ❌ Ошибка onDisable модуля ${id}:`, err);
+        console.error(`Ошибка onDisable модуля ${id}:`, err);
       }
     }
-    
-    console.log(`[ModuleManager] 📚 Активные словари после отключения:`, 
-      Array.from(this.editor.dictionaryManager.activeDictionaries));
   }
-  // @anchor:modulemanager-disablemodule-end
 
-  // @anchor:modulemanager-togglemodule-start
-  // @desc:Переключает состояние модуля (вкл/выкл)
   toggleModule(id) {
     const mod = this.modules.get(id);
     if (mod.enabled) {
@@ -1621,10 +1420,7 @@ class ModuleManager {
     }
     this.editor.showHint(`${mod.enabled ? 'Включён' : 'Выключен'} модуль "${mod.name}"`, 2000);
   }
-  // @anchor:modulemanager-togglemodule-end
 
-  // @anchor:modulemanager-setupdropzone-start
-  // @desc:Настраивает зону для drag-and-drop установки модулей
   setupDropZone() {
     const dropZone = document.getElementById('module-drop-zone');
     if (!dropZone) return;
@@ -1646,10 +1442,7 @@ class ModuleManager {
       }
     });
   }
-  // @anchor:modulemanager-setupdropzone-end
 
-  // @anchor:modulemanager-installmodule-start
-  // @desc:Устанавливает модуль из файла
   async installModule(file) {
     const code = await file.text();
     const moduleId = file.name.replace(/\.(js|txt)$/, '');
@@ -1698,35 +1491,16 @@ class ModuleManager {
       console.error(err);
     }
   }
-  // @anchor:modulemanager-installmodule-end
 
-  // @anchor:modulemanager-createmoduleapi-start
-  // @desc:Создаёт API для взаимодействия модуля с редактором и словарями
   createModuleAPI(moduleId) {
-    const moduleDictionaries = new Map();
-    
     return {
-      // @anchor:moduleapi-gettext-start
-      // @desc:Возвращает текущий текст редактора
       getText: () => this.editor.editor.value,
-      // @anchor:moduleapi-gettext-end
-      
-      // @anchor:moduleapi-getcursor-start
-      // @desc:Возвращает позицию курсора
       getCursor: () => this.editor.getCursorPosition(),
-      // @anchor:moduleapi-getcursor-end
-      
-      // @anchor:moduleapi-settext-start
-      // @desc:Устанавливает текст и опционально позицию курсора
       setText: (text, cursorPos) => {
         this.editor.editor.value = text;
         if (cursorPos !== undefined) this.editor.setCursorPosition(cursorPos);
         this.editor.saveHistoryState();
       },
-      // @anchor:moduleapi-settext-end
-      
-      // @anchor:moduleapi-replacerange-start
-      // @desc:Заменяет диапазон текста
       replaceRange: (start, end, replacement) => {
         const text = this.editor.editor.value;
         const newText = text.slice(0, start) + replacement + text.slice(end);
@@ -1734,192 +1508,15 @@ class ModuleManager {
         this.editor.setCursorPosition(start + replacement.length);
         this.editor.saveHistoryState();
       },
-      // @anchor:moduleapi-replacerange-end
-      
-      // @anchor:moduleapi-showhint-start
-      // @desc:Показывает всплывающую подсказку
       showHint: (msg) => this.editor.showHint(msg),
-      // @anchor:moduleapi-showhint-end
-      
-      // @anchor:moduleapi-log-start
-      // @desc:Логирует сообщение с префиксом модуля
       log: (...args) => console.log(`[Модуль ${moduleId}]`, ...args),
-      // @anchor:moduleapi-log-end
-      
-      // @anchor:moduleapi-registerhotkey-start
-      // @desc:Регистрирует горячую клавишу для модуля
       registerHotkey: (key, handler) => {
         if (!this.editor.moduleHotkeys) this.editor.moduleHotkeys = [];
         this.editor.moduleHotkeys.push({ key, handler, moduleId });
-      },
-      // @anchor:moduleapi-registerhotkey-end
-      
-      // @anchor:moduleapi-registerdictionary-start
-      // @desc:Регистрирует словарь модуля в общем менеджере
-      registerDictionary: (dictName, dictionary) => {
-        console.log(`[ModuleAPI:${moduleId}] 📕 registerDictionary("${dictName}") — начало`);
-        console.log(`[ModuleAPI:${moduleId}] 📊 Словарь содержит ${Object.keys(dictionary).length} сокращений:`, Object.keys(dictionary));
-        
-        if (!dictName || typeof dictName !== 'string') {
-          console.error(`[ModuleAPI:${moduleId}] ❌ Ошибка: имя словаря должно быть строкой`);
-          return false;
-        }
-        if (!dictionary || typeof dictionary !== 'object') {
-          console.error(`[ModuleAPI:${moduleId}] ❌ Ошибка: словарь должен быть объектом`);
-          return false;
-        }
-        
-        const existing = this.editor.dictionaryManager.dictionaries[dictName];
-        if (existing && !moduleDictionaries.has(dictName)) {
-          console.warn(`[ModuleAPI:${moduleId}] ⚠️ Словарь "${dictName}" уже существует и будет перезаписан`);
-        }
-        
-        this.editor.dictionaryManager.dictionaries[dictName] = { ...dictionary };
-        moduleDictionaries.set(dictName, true);
-        
-        if (!this.editor.dictionaryManager.activeDictionaries.has(dictName)) {
-          this.editor.dictionaryManager.activeDictionaries.add(dictName);
-          console.log(`[ModuleAPI:${moduleId}] ✅ Словарь "${dictName}" добавлен в активные`);
-        }
-        
-        this.editor.dictionaryManager.saveDictionaries();
-        this.editor.dictionaryManager.saveActiveDictionaries();
-        this.editor.dictionaryManager.rebuildActiveDictionary();
-        this.editor.dictionaryManager.checkConflicts();
-        this.editor.dictionaryManager.renderShortcutsTable();
-        this.editor.dictionaryManager.renderDictionariesList();
-        this.editor.dictionaryManager.updateConflictStatus();
-        
-        console.log(`[ModuleAPI:${moduleId}] ✅ Словарь "${dictName}" успешно зарегистрирован`);
-        console.log(`[ModuleAPI:${moduleId}] 📚 Текущие активные словари:`, 
-          Array.from(this.editor.dictionaryManager.activeDictionaries));
-        return true;
-      },
-      // @anchor:moduleapi-registerdictionary-end
-      
-      // @anchor:moduleapi-updatedictionary-start
-      // @desc:Обновляет существующий словарь модуля
-      updateDictionary: (dictName, dictionary) => {
-        console.log(`[ModuleAPI:${moduleId}] 🔄 updateDictionary("${dictName}")`);
-        if (!moduleDictionaries.has(dictName)) {
-          console.error(`[ModuleAPI:${moduleId}] ❌ Словарь "${dictName}" не принадлежит этому модулю`);
-          return false;
-        }
-        return this.registerDictionary(dictName, dictionary);
-      },
-      // @anchor:moduleapi-updatedictionary-end
-      
-      // @anchor:moduleapi-addshortcuts-start
-      // @desc:Добавляет сокращения в существующий словарь модуля
-      addShortcuts: (dictName, shortcuts) => {
-        console.log(`[ModuleAPI:${moduleId}] ➕ addShortcuts("${dictName}", ${Object.keys(shortcuts).length} шт.)`);
-        if (!moduleDictionaries.has(dictName)) {
-          console.error(`[ModuleAPI:${moduleId}] ❌ Словарь "${dictName}" не найден. Сначала зарегистрируйте его.`);
-          return false;
-        }
-        
-        const existing = this.editor.dictionaryManager.dictionaries[dictName] || {};
-        Object.assign(existing, shortcuts);
-        this.editor.dictionaryManager.dictionaries[dictName] = existing;
-        
-        this.editor.dictionaryManager.saveDictionaries();
-        this.editor.dictionaryManager.rebuildActiveDictionary();
-        this.editor.dictionaryManager.checkConflicts();
-        this.editor.dictionaryManager.renderShortcutsTable();
-        this.editor.dictionaryManager.updateConflictStatus();
-        
-        console.log(`[ModuleAPI:${moduleId}] ✅ Добавлено ${Object.keys(shortcuts).length} сокращений в "${dictName}"`);
-        return true;
-      },
-      // @anchor:moduleapi-addshortcuts-end
-      
-      // @anchor:moduleapi-unregisterdictionary-start
-      // @desc:Удаляет словарь модуля
-      unregisterDictionary: (dictName) => {
-        console.log(`[ModuleAPI:${moduleId}] 📕 unregisterDictionary("${dictName}")`);
-        
-        if (!moduleDictionaries.has(dictName)) {
-          console.error(`[ModuleAPI:${moduleId}] ❌ Словарь "${dictName}" не принадлежит этому модулю`);
-          return false;
-        }
-        
-        delete this.editor.dictionaryManager.dictionaries[dictName];
-        this.editor.dictionaryManager.activeDictionaries.delete(dictName);
-        moduleDictionaries.delete(dictName);
-        
-        this.editor.dictionaryManager.saveDictionaries();
-        this.editor.dictionaryManager.saveActiveDictionaries();
-        this.editor.dictionaryManager.rebuildActiveDictionary();
-        this.editor.dictionaryManager.checkConflicts();
-        this.editor.dictionaryManager.renderShortcutsTable();
-        this.editor.dictionaryManager.renderDictionariesList();
-        this.editor.dictionaryManager.updateConflictStatus();
-        
-        console.log(`[ModuleAPI:${moduleId}] ✅ Словарь "${dictName}" удалён`);
-        console.log(`[ModuleAPI:${moduleId}] 📚 Активные словари после удаления:`, 
-          Array.from(this.editor.dictionaryManager.activeDictionaries));
-        return true;
-      },
-      // @anchor:moduleapi-unregisterdictionary-end
-      
-      // @anchor:moduleapi-getactivedictionary-start
-      // @desc:Возвращает объединённый активный словарь
-      getActiveDictionary: () => {
-        const dict = { ...this.editor.dictionaryManager.combinedActiveDictionary };
-        console.log(`[ModuleAPI:${moduleId}] 📖 getActiveDictionary: ${Object.keys(dict).length} сокращений`);
-        return dict;
-      },
-      // @anchor:moduleapi-getactivedictionary-end
-      
-      // @anchor:moduleapi-isshortcutactive-start
-      // @desc:Проверяет, активно ли сокращение
-      isShortcutActive: (shortcut) => {
-        const isActive = !this.editor.dictionaryManager.conflictingShortcuts.has(shortcut) &&
-               shortcut in this.editor.dictionaryManager.combinedActiveDictionary;
-        console.log(`[ModuleAPI:${moduleId}] 🔍 isShortcutActive("${shortcut}"): ${isActive}`);
-        return isActive;
-      },
-      // @anchor:moduleapi-isshortcutactive-end
-      
-      // @anchor:moduleapi-getconflictingshortcuts-start
-      // @desc:Возвращает список конфликтующих сокращений
-      getConflictingShortcuts: () => {
-        const conflicts = Array.from(this.editor.dictionaryManager.conflictingShortcuts);
-        console.log(`[ModuleAPI:${moduleId}] ⚠️ getConflictingShortcuts: ${conflicts.length} конфликтов`);
-        return conflicts;
-      },
-      // @anchor:moduleapi-getconflictingshortcuts-end
-      
-      // @anchor:moduleapi-applydictionary-start
-      // @desc:Применяет активный словарь к переданному тексту
-      applyDictionary: (text) => {
-        console.log(`[ModuleAPI:${moduleId}] 🔄 applyDictionary: обработка текста (${text.length} символов)`);
-        let result = text;
-        const dict = this.editor.dictionaryManager.combinedActiveDictionary;
-        const sortedKeys = Object.keys(dict).sort((a, b) => b.length - a.length);
-        
-        let i = 0;
-        while (i < result.length) {
-          let replaced = false;
-          for (let word of sortedKeys) {
-            if (result.substring(i).startsWith(word)) {
-              result = result.substring(0, i) + dict[word] + result.substring(i + word.length);
-              i += dict[word].length;
-              replaced = true;
-              break;
-            }
-          }
-          if (!replaced) i++;
-        }
-        return result;
       }
-      // @anchor:moduleapi-applydictionary-end
     };
   }
-  // @anchor:modulemanager-createmoduleapi-end
 
-  // @anchor:modulemanager-processwithmodules-start
-  // @desc:Обрабатывает текст через все активные модули
   processWithModules(text, cursorPos) {
     let result = text;
     let newCursor = cursorPos;
@@ -1956,10 +1553,7 @@ class ModuleManager {
     }
     return { text: result, cursorPos: newCursor };
   }
-  // @anchor:modulemanager-processwithmodules-end
 
-  // @anchor:modulemanager-rendermoduleslist-start
-  // @desc:Отрисовывает список установленных модулей
   renderModulesList() {
     const tbody = document.getElementById('modules-table-body');
     if (!tbody) return;
@@ -1999,10 +1593,7 @@ class ModuleManager {
       tbody.appendChild(row);
     }
   }
-  // @anchor:modulemanager-rendermoduleslist-end
 
-  // @anchor:modulemanager-updatemoduleinfo-start
-  // @desc:Обновляет панель информации о выбранном модуле
   updateModuleInfo() {
     const descDiv = document.getElementById('module-description');
     const syntaxDiv = document.getElementById('module-syntax');
@@ -2033,10 +1624,7 @@ class ModuleManager {
       if (deleteBtn) deleteBtn.disabled = true;
     }
   }
-  // @anchor:modulemanager-updatemoduleinfo-end
 
-  // @anchor:modulemanager-showmodulecode-start
-  // @desc:Отображает код выбранного модуля в редакторе
   showModuleCode(id) {
     const mod = this.modules.get(id);
     const textarea = document.getElementById('module-code-editor');
@@ -2047,10 +1635,7 @@ class ModuleManager {
       this.currentEditingModuleId = id;
     }
   }
-  // @anchor:modulemanager-showmodulecode-end
 
-  // @anchor:modulemanager-clearmoduleeditor-start
-  // @desc:Очищает редактор кода модуля
   clearModuleEditor() {
     const textarea = document.getElementById('module-code-editor');
     const saveBtn = document.getElementById('save-module-btn');
@@ -2062,10 +1647,7 @@ class ModuleManager {
     const statusDiv = document.getElementById('module-edit-status');
     if (statusDiv) statusDiv.style.display = 'none';
   }
-  // @anchor:modulemanager-clearmoduleeditor-end
 
-  // @anchor:modulemanager-savecurrentmodule-start
-  // @desc:Сохраняет изменения в коде текущего модуля
   async saveCurrentModule() {
     const textarea = document.getElementById('module-code-editor');
     const code = textarea.value;
@@ -2104,10 +1686,7 @@ class ModuleManager {
       }
     }
   }
-  // @anchor:modulemanager-savecurrentmodule-end
 
-  // @anchor:modulemanager-deletecurrentmodule-start
-  // @desc:Удаляет выбранный модуль
   deleteCurrentModule() {
     if (!this.selectedModuleId) return;
     const mod = this.modules.get(this.selectedModuleId);
@@ -2123,10 +1702,7 @@ class ModuleManager {
       this.editor.showHint(`🗑️ Модуль удалён`, 2000);
     }
   }
-  // @anchor:modulemanager-deletecurrentmodule-end
 
-  // @anchor:modulemanager-exportmodule-start
-  // @desc:Экспортирует модуль в файл
   exportModule(id) {
     const mod = this.modules.get(id);
     if (mod) {
@@ -2139,10 +1715,7 @@ class ModuleManager {
       this.editor.showHint(`📦 Модуль "${mod.name}" экспортирован`, 2000);
     }
   }
-  // @anchor:modulemanager-exportmodule-end
 
-  // @anchor:modulemanager-setupeventlisteners-start
-  // @desc:Настраивает обработчики событий для интерфейса модулей
   setupEventListeners() {
     const tbody = document.getElementById('modules-table-body');
     if (tbody) {
@@ -2158,10 +1731,7 @@ class ModuleManager {
     const deleteBtn = document.getElementById('delete-module-btn');
     if (deleteBtn) deleteBtn.addEventListener('click', () => this.deleteCurrentModule());
   }
-  // @anchor:modulemanager-setupeventlisteners-end
 
-  // @anchor:modulemanager-savetostorage-start
-  // @desc:Сохраняет модули в localStorage
   saveToStorage() {
     const toSave = {};
     for (let [id, mod] of this.modules) {
@@ -2173,16 +1743,12 @@ class ModuleManager {
         syntax: mod.syntax,
         code: mod.code,
         enabled: mod.enabled,
-        installedAt: mod.installedAt,
-        wasEverEnabled: mod.wasEverEnabled || false
+        installedAt: mod.installedAt
       };
     }
     localStorage.setItem('noteWarp_modules', JSON.stringify(toSave));
   }
-  // @anchor:modulemanager-savetostorage-end
 
-  // @anchor:modulemanager-loadfromstorage-start
-  // @desc:Загружает модули из localStorage
   loadFromStorage() {
     const saved = localStorage.getItem('noteWarp_modules');
     if (!saved) return;
@@ -2199,8 +1765,7 @@ class ModuleManager {
               ...mod,
               code: modData.code,
               enabled: modData.enabled !== false,
-              installedAt: modData.installedAt || Date.now(),
-              wasEverEnabled: modData.wasEverEnabled || false
+              installedAt: modData.installedAt || Date.now()
             });
           } else {
             console.error(`Ошибка загрузки модуля ${id}: невалидная структура`);
@@ -2211,28 +1776,8 @@ class ModuleManager {
       }
       setTimeout(() => {
         for (let [id, mod] of this.modules) {
-          if (mod.enabled) {
-            if (!mod.wasEverEnabled && mod.init) {
-              try {
-                mod.init(this.createModuleAPI(id));
-                mod.wasEverEnabled = true;
-                console.log(`[ModuleManager] Модуль "${mod.name}" инициализирован при загрузке`);
-              } catch (err) {
-                console.error(`Ошибка init модуля ${id} при загрузке:`, err);
-              }
-            }
-            if (mod.onEnable) {
-              try {
-                mod.onEnable(this.createModuleAPI(id));
-              } catch (err) {
-                console.error(`Ошибка onEnable модуля ${id} при загрузке:`, err);
-              }
-            }
-            this.enableModule(id);
-          }
+          if (mod.enabled) this.enableModule(id);
         }
-        this.saveToStorage();
-        
         setTimeout(() => {
           if (this.refreshAllButtons) {
             this.refreshAllButtons();
@@ -2243,10 +1788,7 @@ class ModuleManager {
       console.error('Ошибка загрузки модулей из localStorage:', e);
     }
   }
-  // @anchor:modulemanager-loadfromstorage-end
 
-  // @anchor:modulemanager-refreshallbuttons-start
-  // @desc:Принудительно обновляет все кнопки модулей на панели инструментов
   refreshAllButtons() {
     for (let [id, btn] of this.moduleButtons) {
         btn.remove();
@@ -2258,16 +1800,11 @@ class ModuleManager {
         }
     }
   }
-  // @anchor:modulemanager-refreshallbuttons-end
 }
-// @anchor:class-modulemanager-end
+// <class-modulemanager]
 
-// === [JS] Основной редактор ===
-// @anchor:class-texteditor-start
-// @desc:Главный класс редактора
+// [class-texteditor>
 class TextEditor {
-  // @anchor:texteditor-constructor-start
-  // @desc:Инициализирует редактор, менеджеры и обработчики
   constructor(element, dictManager, feedbackManager) {
     this.editor = element;
     this.dictionaryManager = dictManager;
@@ -2280,6 +1817,7 @@ class TextEditor {
     this.validator = new MarkerValidator(this);
     this.hintTimeout = null;
     this.moduleHotkeys = [];
+    
     this.jumpChar = '*';
     
     this.setupEventListeners();
@@ -2289,22 +1827,19 @@ class TextEditor {
     this.setInitialFilename();
     this.saveHistoryState();
     this.setupReferenceButton();
+    
     this.loadJumpCharSetting();
     
     this.moduleManager = new ModuleManager(this);
+
+    this.preventFocusOnToolButtons();
   }
-  // @anchor:texteditor-constructor-end
   
-  // @anchor:texteditor-setupreferencebutton-start
-  // @desc:Привязывает обработчики кнопок развёртывания ссылок и индикатора проблем
   setupReferenceButton() {
     document.getElementById('resolve-references-btn').addEventListener('click', () => this.resolveReferences());
     document.getElementById('marker-problems-indicator').addEventListener('click', () => this.validator.showProblemReport());
   }
-  // @anchor:texteditor-setupreferencebutton-end
   
-  // @anchor:texteditor-loadwordwrapsetting-start
-  // @desc:Загружает настройку переноса слов
   loadWordWrapSetting() {
     const saved = localStorage.getItem('noteWarpWordWrap');
     if (saved !== null) {
@@ -2313,10 +1848,7 @@ class TextEditor {
       if (checkbox) { checkbox.checked = enabled; this.editor.wrap = enabled ? 'soft' : 'off'; }
     }
   }
-  // @anchor:texteditor-loadwordwrapsetting-end
   
-  // @anchor:texteditor-loadjumpcharsetting-start
-  // @desc:Загружает настройку символа перехода
   loadJumpCharSetting() {
     const saved = localStorage.getItem('noteWarpJumpChar');
     if (saved && saved.length === 1) {
@@ -2325,32 +1857,31 @@ class TextEditor {
       if (input) input.value = saved;
     }
   }
-  // @anchor:texteditor-loadjumpcharsetting-end
   
-  // @anchor:texteditor-setupwordwrap-start
-  // @desc:Настраивает обработчик изменения переноса слов
   setupWordWrap() {
     document.getElementById('word-wrap-checkbox').addEventListener('change', (e) => {
       this.editor.wrap = e.target.checked ? 'soft' : 'off';
       localStorage.setItem('noteWarpWordWrap', e.target.checked);
     });
   }
-  // @anchor:texteditor-setupwordwrap-end
   
-  // @anchor:texteditor-setupeventlisteners-start
-  // @desc:Привязывает основные обработчики событий редактора
   setupEventListeners() {
     this.editor.addEventListener('keydown', (e) => this.handleKeyDown(e));
     this.editor.addEventListener('input', (e) => this.handleInput(e));
     this.editor.addEventListener('paste', () => this.handlePaste());
     document.getElementById('scan-replace-btn').addEventListener('click', () => this.scanAndReplaceAll());
   }
-  // @anchor:texteditor-setupeventlisteners-end
   
-  // @anchor:texteditor-scanandreplaceall-start
-  // @desc:Выполняет замену всех сокращений в тексте (Ctrl+M)
+  preventFocusOnToolButtons() {
+    const toolbarButtons = document.querySelectorAll('.tool-btn, #resolve-references-btn, #marker-problems-indicator');
+    toolbarButtons.forEach(btn => {
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+    });
+  }
+  
   scanAndReplaceAll() {
-    const wasEditorFocused = document.activeElement === this.editor;
     const cursorPosBefore = this.getCursorPosition();
     
     this.saveHistoryState();
@@ -2358,11 +1889,7 @@ class TextEditor {
     const dictionary = this.dictionaryManager.getActiveDictionary();
     if (Object.keys(dictionary).length === 0) { 
       this.feedbackManager.triggerFeedback(); 
-      if (wasEditorFocused) {
-        this.editor.focus();
-        this.setCursorPosition(cursorPosBefore);
-      }
-      return; 
+      return;
     }
     const sortedKeys = Object.keys(dictionary).sort((a, b) => b.length - a.length);
     let totalReplacements = 0, i = 0;
@@ -2394,10 +1921,6 @@ class TextEditor {
     if (cursorPos !== -1) this.setCursorPosition(Math.min(cursorPos, content.length));
     else this.setCursorPosition(Math.min(cursorPosBefore, content.length));
     
-    if (wasEditorFocused) {
-      this.editor.focus();
-    }
-    
     if (totalReplacements > 0 || starCount > 0) {
       let msg = `✅ Выполнено ${totalReplacements} замен`;
       if (starCount > 0) msg += `. Добавлено ${starCount} полей (*). Используйте Alt+X.`;
@@ -2406,12 +1929,8 @@ class TextEditor {
     this.feedbackManager.triggerFeedback();
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-scanandreplaceall-end
   
-  // @anchor:texteditor-resolvereferences-start
-  // @desc:Разворачивает ссылки [[n]] в содержимое разделов (Ctrl+R)
   resolveReferences() {
-    const wasEditorFocused = document.activeElement === this.editor;
     const cursorPosBefore = this.getCursorPosition();
     
     this.saveHistoryState();
@@ -2434,17 +1953,10 @@ class TextEditor {
       this.showHint('Ссылок не найдено', 1500);
     }
     
-    if (wasEditorFocused) {
-      this.editor.focus();
-      this.setCursorPosition(Math.min(cursorPosBefore, this.editor.value.length));
-    }
-    
+    this.setCursorPosition(Math.min(cursorPosBefore, this.editor.value.length));
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-resolvereferences-end
   
-  // @anchor:texteditor-performautoreplace-start
-  // @desc:Выполняет автоматическую замену сокращения при вводе
   performAutoReplace(word, replacement) {
     const wasEditorFocused = document.activeElement === this.editor;
     this.saveHistoryState();
@@ -2471,10 +1983,7 @@ class TextEditor {
     this.feedbackManager.triggerFeedback();
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-performautoreplace-end
   
-  // @anchor:texteditor-setupsavefunctionality-start
-  // @desc:Настраивает функциональность сохранения файла
   setupSaveFunctionality() {
     const saveBtn = document.getElementById('save-file-btn');
     const filenameInput = document.getElementById('filename-input');
@@ -2486,27 +1995,23 @@ class TextEditor {
     saveBtn.addEventListener('click', () => this.saveFile());
     filenameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.saveFile(); });
   }
-  // @anchor:texteditor-setupsavefunctionality-end
   
-  // @anchor:texteditor-setinitialfilename-start
-  // @desc:Устанавливает начальное имя файла по текущей дате и времени
   setInitialFilename() {
     const now = new Date();
     document.getElementById('filename-input').value = now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0].substring(0, 5).replace(':', '-');
   }
-  // @anchor:texteditor-setinitialfilename-end
   
-  // @anchor:texteditor-savefile-start
-  // @desc:Сохраняет содержимое редактора в файл
   saveFile() {
     const wasEditorFocused = document.activeElement === this.editor;
     let filename = document.getElementById('filename-input').value.trim();
     const errorElement = document.getElementById('filename-error');
     filename = this.processFilenameTemplate(filename);
-    if (!filename) { DOMUtils.showError(errorElement, 'Имя файла не может быть пустым'); if (wasEditorFocused) this.editor.focus(); return; }
-    const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
-    if (invalidChars.test(filename)) { DOMUtils.showError(errorElement, 'Недопустимые символы'); if (wasEditorFocused) this.editor.focus(); return; }
-    if (filename.length > 255) { DOMUtils.showError(errorElement, 'Имя файла слишком длинное'); if (wasEditorFocused) this.editor.focus(); return; }
+    const validation = DOMUtils.validateFilename(filename);
+    if (!validation.valid) {
+      DOMUtils.showError(errorElement, validation.error);
+      if (wasEditorFocused) this.editor.focus();
+      return;
+    }
     DOMUtils.clearError(errorElement);
     const blob = new Blob([this.editor.value], { type: 'text/plain' });
     const a = document.createElement('a');
@@ -2516,50 +2021,24 @@ class TextEditor {
     URL.revokeObjectURL(a.href);
     if (wasEditorFocused) this.editor.focus();
   }
-  // @anchor:texteditor-savefile-end
   
-  // @anchor:texteditor-savehistorystate-start
-  // @desc:Сохраняет текущее состояние редактора в историю
   saveHistoryState() { this.historyManager.pushState({ val: this.editor.value, cur: this.getCursorPosition() }); }
-  // @anchor:texteditor-savehistorystate-end
-  
-  // @anchor:texteditor-undo-start
-  // @desc:Отменяет последнее изменение
   undo() {
     const wasFocused = document.activeElement === this.editor;
     const state = this.historyManager.undo();
     if (state) { this.isUndoRedoOperation = true; this.editor.value = state.val; this.setCursorPosition(state.cur); setTimeout(() => this.isUndoRedoOperation = false, 0); }
     if (wasFocused) this.editor.focus();
   }
-  // @anchor:texteditor-undo-end
-  
-  // @anchor:texteditor-redo-start
-  // @desc:Повторяет отменённое изменение
   redo() {
     const wasFocused = document.activeElement === this.editor;
     const state = this.historyManager.redo();
     if (state) { this.isUndoRedoOperation = true; this.editor.value = state.val; this.setCursorPosition(state.cur); setTimeout(() => this.isUndoRedoOperation = false, 0); }
     if (wasFocused) this.editor.focus();
   }
-  // @anchor:texteditor-redo-end
-  
-  // @anchor:texteditor-getcursorposition-start
-  // @desc:Возвращает текущую позицию курсора
   getCursorPosition() { return this.editor.selectionStart; }
-  // @anchor:texteditor-getcursorposition-end
-  
-  // @anchor:texteditor-setcursorposition-start
-  // @desc:Устанавливает позицию курсора
   setCursorPosition(pos) { this.editor.setSelectionRange(pos, pos); }
-  // @anchor:texteditor-setcursorposition-end
-  
-  // @anchor:texteditor-selecttext-start
-  // @desc:Выделяет текст в заданном диапазоне
   selectText(start, end) { this.editor.setSelectionRange(start, end); }
-  // @anchor:texteditor-selecttext-end
   
-  // @anchor:texteditor-handlekeydown-start
-  // @desc:Обрабатывает нажатия клавиш
   handleKeyDown(e) {
     if (this.moduleHotkeys) {
       for (let hk of this.moduleHotkeys) {
@@ -2589,17 +2068,11 @@ class TextEditor {
     if (e.ctrlKey && (e.key === 'z' || e.key === 'я')) { e.preventDefault(); if (e.shiftKey) this.redo(); else this.undo(); return; }
     if (e.ctrlKey && (e.key === 'y' || e.key === 'н')) { e.preventDefault(); this.redo(); return; }
     if (e.key === 'Tab') { e.preventDefault(); this.insertText('\t'); return; }
-    // @anchor:texteditor-altx-start
-    // @desc:Переход к настраиваемому символу (по умолчанию '*')
     if (e.altKey && (e.key === 'x' || e.key === 'ч')) { e.preventDefault(); this.findAndSelectNext(this.jumpChar); return; }
-    // @anchor:texteditor-altx-end
     if (e.key === 'Pause') { e.preventDefault(); this.toggleCyrillicSelection(); return; }
     if (e.key === 'Backspace' || e.key === 'Delete') { if (!this.isUndoRedoOperation) this.saveHistoryState(); }
   }
-  // @anchor:texteditor-handlekeydown-end
   
-  // @anchor:texteditor-handleinput-start
-  // @desc:Обрабатывает ввод текста
   handleInput(e) {
     if (this.isUndoRedoOperation) return;
     const text = e.data || '';
@@ -2619,20 +2092,10 @@ class TextEditor {
     } else { setTimeout(() => this.saveHistoryState(), 0); }
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-handleinput-end
   
-  // @anchor:texteditor-handlepaste-start
-  // @desc:Обрабатывает вставку текста
   handlePaste() { if (!this.isUndoRedoOperation) setTimeout(() => { this.saveHistoryState(); this.validator.scheduleValidation(); }, 0); }
-  // @anchor:texteditor-handlepaste-end
-  
-  // @anchor:texteditor-inserttext-start
-  // @desc:Вставляет текст в позицию курсора
   insertText(text) { if (!this.isUndoRedoOperation) this.saveHistoryState(); const pos = this.getCursorPosition(); this.editor.value = this.editor.value.slice(0, pos) + text + this.editor.value.slice(pos); this.setCursorPosition(pos + text.length); this.inputBuffer = this.autoReplacer.updateBuffer(this.inputBuffer, text); this.validator.scheduleValidation(); }
-  // @anchor:texteditor-inserttext-end
   
-  // @anchor:texteditor-findandselectnext-start
-  // @desc:Ищет и выделяет следующее вхождение символа
   findAndSelectNext(char) {
     const content = this.editor.value;
     let pos = content.indexOf(char, this.getCursorPosition() + 1);
@@ -2640,10 +2103,7 @@ class TextEditor {
     if (pos !== -1) { this.selectText(pos, pos + 1); this.feedbackManager.triggerFeedback(); }
     else this.showHint(`Символ "${char}" не найден`, 1500);
   }
-  // @anchor:texteditor-findandselectnext-end
   
-  // @anchor:texteditor-navigatetotag-start
-  // @desc:Перемещает курсор к нумерованному маркеру
   navigateToTag(tag, shouldSelect = false) {
     const wasFocused = document.activeElement === this.editor;
     const positions = this.findTagPairPositions(tag);
@@ -2659,10 +2119,7 @@ class TextEditor {
     this.feedbackManager.triggerFeedback();
     if (wasFocused) this.editor.focus();
   }
-  // @anchor:texteditor-navigatetotag-end
   
-  // @anchor:texteditor-navigatetonamedtag-start
-  // @desc:Перемещает курсор к именованному маркеру
   navigateToNamedTag(tagName, shouldSelect = false) {
     const wasFocused = document.activeElement === this.editor;
     const positions = this.findTagPairPositions(tagName);
@@ -2673,10 +2130,7 @@ class TextEditor {
     } else this.showHint(`Маркер [${tagName}> не найден`, 1500);
     if (wasFocused) this.editor.focus();
   }
-  // @anchor:texteditor-navigatetonamedtag-end
   
-  // @anchor:texteditor-findanymarker-start
-  // @desc:Ищет любой маркер (открывающий или закрывающий)
   findAnyMarker(tag) {
     const c = this.editor.value;
     const o = c.indexOf(`[${tag}>`), cl = c.indexOf(`<${tag}]`);
@@ -2684,10 +2138,7 @@ class TextEditor {
     if (cl !== -1) return cl;
     return null;
   }
-  // @anchor:texteditor-findanymarker-end
   
-  // @anchor:texteditor-findtagpairpositions-start
-  // @desc:Находит позиции пары открывающего и закрывающего маркеров
   findTagPairPositions(tagName) {
     const content = this.editor.value;
     const cursorPos = this.getCursorPosition();
@@ -2713,10 +2164,7 @@ class TextEditor {
     if (!found && pairs.length) found = pairs[0];
     return found;
   }
-  // @anchor:texteditor-findtagpairpositions-end
   
-  // @anchor:texteditor-extracttextbetweenmarkers-start
-  // @desc:Извлекает текст между открывающим и закрывающим маркерами
   extractTextBetweenMarkers(tagName) {
     const content = this.editor.value;
     const esc = this.escapeRegExp(tagName);
@@ -2727,10 +2175,7 @@ class TextEditor {
     if (openMatch && closeMatch && closeMatch.index > openMatch.index) return content.substring(openMatch.index + openMatch[0].length, closeMatch.index);
     return null;
   }
-  // @anchor:texteditor-extracttextbetweenmarkers-end
   
-  // @anchor:texteditor-processfilenametemplate-start
-  // @desc:Обрабатывает шаблон имени файла, заменяя [[n]] на содержимое маркеров
   processFilenameTemplate(filename) {
     const tagRegex = /\[\[([^\[\]]+)\]\]/g;
     let result = filename, m;
@@ -2740,10 +2185,7 @@ class TextEditor {
     }
     return result;
   }
-  // @anchor:texteditor-processfilenametemplate-end
   
-  // @anchor:texteditor-removeallmarkers-start
-  // @desc:Удаляет все маркеры из текста (Ctrl+0)
   removeAllMarkers() {
     const wasFocused = document.activeElement === this.editor;
     this.saveHistoryState();
@@ -2751,10 +2193,7 @@ class TextEditor {
     if (wasFocused) this.editor.focus();
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-removeallmarkers-end
   
-  // @anchor:texteditor-togglecyrillicselection-start
-  // @desc:Переключает раскладку выделенного текста (Pause)
   toggleCyrillicSelection() {
     const wasFocused = document.activeElement === this.editor;
     const start = this.editor.selectionStart, end = this.editor.selectionEnd;
@@ -2767,10 +2206,7 @@ class TextEditor {
     if (wasFocused) this.editor.focus();
     this.validator.scheduleValidation();
   }
-  // @anchor:texteditor-togglecyrillicselection-end
   
-  // @anchor:texteditor-swaplayout-start
-  // @desc:Переключает раскладку символов между русской и английской
   swapLayout(text) {
     const map = { 'q':'й','w':'ц','e':'у','r':'к','t':'е','y':'н','u':'г','i':'ш','o':'щ','p':'з','[':'х',']':'ъ','a':'ф','s':'ы','d':'в','f':'а','g':'п','h':'р','j':'о','k':'л','l':'д',';':'ж',"'":'э','z':'я','x':'ч','c':'с','v':'м','b':'и','n':'т','m':'ь',',':'б','.':'ю','/':'.','Q':'Й','W':'Ц','E':'У','R':'К','T':'Е','Y':'Н','U':'Г','I':'Ш','O':'Щ','P':'З','{':'Х','}':'Ъ','A':'Ф','S':'Ы','D':'В','F':'А','G':'П','H':'Р','J':'О','K':'Л','L':'Д',':':'Ж','"':'Э','Z':'Я','X':'Ч','C':'С','V':'М','B':'И','N':'Т','M':'Ь','<':'Б','>':'Ю','?':',' };
     const rev = {};
@@ -2779,15 +2215,9 @@ class TextEditor {
     for (let ch of text) r += map[ch] || rev[ch] || ch;
     return r;
   }
-  // @anchor:texteditor-swaplayout-end
   
-  // @anchor:texteditor-escaperegexp-start
-  // @desc:Экранирует специальные символы регулярного выражения
   escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-  // @anchor:texteditor-escaperegexp-end
   
-  // @anchor:texteditor-showhint-start
-  // @desc:Показывает всплывающую подсказку в углу экрана
   showHint(msg, dur = 4000) {
     if (this.hintTimeout) { clearTimeout(this.hintTimeout); const old = document.getElementById('note-warp-hint'); if (old) old.remove(); }
     const el = document.createElement('div');
@@ -2798,16 +2228,11 @@ class TextEditor {
     document.body.appendChild(el);
     this.hintTimeout = setTimeout(() => { if (el.parentNode) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); } this.hintTimeout = null; }, dur);
   }
-  // @anchor:texteditor-showhint-end
 }
-// @anchor:class-texteditor-end
+// <class-texteditor]
 
-// === [JS] Управление словарями ===
-// @anchor:class-dictionarymanager-start
-// @desc:Управление словарями сокращений
+// [class-dictionarymanager>
 class DictionaryManager {
-  // @anchor:dictionarymanager-constructor-start
-  // @desc:Инициализирует менеджер словарей и загружает данные
   constructor() {
     this.dictionaries = this.loadDictionaries();
     this.activeDictionaries = this.loadActiveDictionaries();
@@ -2826,52 +2251,29 @@ class DictionaryManager {
     this.clearEditFields();
     this.updateCurrentDictNameDisplay();
   }
-  // @anchor:dictionarymanager-constructor-end
   
-  // @anchor:dictionarymanager-loaddictionaries-start
-  // @desc:Загружает словари из localStorage
   loadDictionaries() {
     const saved = localStorage.getItem('textEditorDictionaries');
     if (saved) try { return JSON.parse(saved); } catch(e) {}
     return { 'default': this.loadInitialDictionary() };
   }
-  // @anchor:dictionarymanager-loaddictionaries-end
   
-  // @anchor:dictionarymanager-loadinitialdictionary-start
-  // @desc:Загружает начальный словарь с демо-данными
   loadInitialDictionary() {
     const saved = localStorage.getItem('textEditorDictionary');
     if (saved) try { return JSON.parse(saved); } catch(e) {}
     return { "тест\\": "[курсор] Демо: [дата] [время]\n[1>Секция<1]\n[[1]]\n*", "пс\\": "[курсор] Таблица:\n*\t*\n*\t*" };
   }
-  // @anchor:dictionarymanager-loadinitialdictionary-end
   
-  // @anchor:dictionarymanager-loadactivedictionaries-start
-  // @desc:Загружает список активных словарей
   loadActiveDictionaries() {
     const saved = localStorage.getItem('textEditorActiveDictionaries');
     if (saved) try { const p = JSON.parse(saved); const s = new Set(); for (let [k,v] of Object.entries(p)) if(v) s.add(k); return s; } catch(e) {}
     const s = new Set(); if (this.dictionaries.default) s.add('default'); return s;
   }
-  // @anchor:dictionarymanager-loadactivedictionaries-end
   
-  // @anchor:dictionarymanager-savedictionaries-start
-  // @desc:Сохраняет словари в localStorage
   saveDictionaries() { localStorage.setItem('textEditorDictionaries', JSON.stringify(this.dictionaries)); }
-  // @anchor:dictionarymanager-savedictionaries-end
-  
-  // @anchor:dictionarymanager-saveactivedictionaries-start
-  // @desc:Сохраняет список активных словарей
   saveActiveDictionaries() { const obj = {}; for (let n in this.dictionaries) obj[n] = this.activeDictionaries.has(n); localStorage.setItem('textEditorActiveDictionaries', JSON.stringify(obj)); }
-  // @anchor:dictionarymanager-saveactivedictionaries-end
-  
-  // @anchor:dictionarymanager-getactivedictionary-start
-  // @desc:Возвращает объединённый активный словарь
   getActiveDictionary() { return this.combinedActiveDictionary; }
-  // @anchor:dictionarymanager-getactivedictionary-end
   
-  // @anchor:dictionarymanager-loaddictionaryfromfile-start
-  // @desc:Загружает словарь из файла
   loadDictionaryFromFile(file, fileName) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -2887,44 +2289,79 @@ class DictionaryManager {
     };
     reader.readAsText(file);
   }
-  // @anchor:dictionarymanager-loaddictionaryfromfile-end
   
-  // @anchor:dictionarymanager-removedictionary-start
-  // @desc:Удаляет словарь
   removeDictionary(name) { if (confirm(`Удалить "${name}"?`)) { delete this.dictionaries[name]; this.activeDictionaries.delete(name); if (this.selectedDictionaryName === name) this.selectedDictionaryName = null; this.saveDictionaries(); this.saveActiveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.renderDictionariesList(); this.updateConflictStatus(); this.updateCurrentDictNameDisplay(); this.clearEditFields(); } }
-  // @anchor:dictionarymanager-removedictionary-end
   
-  // @anchor:dictionarymanager-toggledictionary-start
-  // @desc:Переключает активность словаря
+  renameDictionary(oldName) {
+    DOMUtils.createTagInputPopup((newName) => {
+      if (newName === oldName) return;
+      if (this.dictionaries[newName]) {
+        alert(`Словарь "${newName}" уже существует`);
+        return;
+      }
+      const validation = DOMUtils.validateFilename(newName);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      this.dictionaries[newName] = this.dictionaries[oldName];
+      delete this.dictionaries[oldName];
+      if (this.activeDictionaries.has(oldName)) {
+        this.activeDictionaries.delete(oldName);
+        this.activeDictionaries.add(newName);
+      }
+      if (this.selectedDictionaryName === oldName) this.selectedDictionaryName = newName;
+      this.saveDictionaries();
+      this.saveActiveDictionaries();
+      this.rebuildActiveDictionary();
+      this.checkConflicts();
+      this.renderShortcutsTable();
+      this.renderDictionariesList();
+      this.updateConflictStatus();
+      this.updateCurrentDictNameDisplay();
+      if (window.editor) window.editor.showHint(`✅ Словарь переименован в "${newName}"`, 2000);
+    }, { allowSpaces: true, title: 'Переименовать словарь', placeholder: 'Новое имя словаря' });
+  }
+  
+  createNewDictionary() {
+    DOMUtils.createTagInputPopup((name) => {
+      if (this.dictionaries[name]) {
+        alert(`Словарь "${name}" уже существует`);
+        return;
+      }
+      const validation = DOMUtils.validateFilename(name);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      this.dictionaries[name] = {};
+      this.activeDictionaries.add(name);
+      this.selectedDictionaryName = name;
+      this.saveDictionaries();
+      this.saveActiveDictionaries();
+      this.rebuildActiveDictionary();
+      this.checkConflicts();
+      this.renderShortcutsTable();
+      this.renderDictionariesList();
+      this.updateConflictStatus();
+      this.updateCurrentDictNameDisplay();
+      this.clearEditFields();
+      if (window.editor) window.editor.showHint(`✅ Словарь "${name}" создан`, 2000);
+    }, { allowSpaces: true, title: 'Новый словарь', placeholder: 'Имя нового словаря' });
+  }
+  
   toggleDictionary(name) { if (this.activeDictionaries.has(name)) this.activeDictionaries.delete(name); else this.activeDictionaries.add(name); this.saveActiveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.renderDictionariesList(); this.updateConflictStatus(); this.clearEditFields(); }
-  // @anchor:dictionarymanager-toggledictionary-end
-  
-  // @anchor:dictionarymanager-exportdictionary-start
-  // @desc:Экспортирует словарь в файл
   exportDictionary(name) { if (this.dictionaries[name]) { const blob = new Blob([JSON.stringify(this.dictionaries[name], null, 2)], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name+'.txt'; a.click(); URL.revokeObjectURL(a.href); } }
-  // @anchor:dictionarymanager-exportdictionary-end
-  
-  // @anchor:dictionarymanager-rebuildactivedictionary-start
-  // @desc:Перестраивает объединённый активный словарь
   rebuildActiveDictionary() { this.combinedActiveDictionary = {}; for (let n of this.activeDictionaries) Object.assign(this.combinedActiveDictionary, this.dictionaries[n]); for (let c of this.conflictingShortcuts) delete this.combinedActiveDictionary[c]; }
-  // @anchor:dictionarymanager-rebuildactivedictionary-end
   
-  // @anchor:dictionarymanager-checkconflicts-start
-  // @desc:Проверяет конфликты сокращений между активными словарями
   checkConflicts() {
     this.conflictingShortcuts.clear(); this.conflictDetails = {}; const src = {};
     for (let n of this.activeDictionaries) for (let s in this.dictionaries[n]) { if (!src[s]) src[s] = []; src[s].push(n); }
     for (let s in src) if (src[s].length > 1) { this.conflictingShortcuts.add(s); this.conflictDetails[s] = src[s]; }
   }
-  // @anchor:dictionarymanager-checkconflicts-end
   
-  // @anchor:dictionarymanager-updateconflictstatus-start
-  // @desc:Обновляет отображение статуса конфликтов
   updateConflictStatus() { const el = document.getElementById('conflict-status'); if (this.conflictingShortcuts.size) { el.textContent = Object.entries(this.conflictDetails).map(([k,v]) => `Конфликт: '${k}' в '${v[0]}' и '${v[1]}'`).join('; '); el.style.display = 'block'; } else el.style.display = 'none'; }
-  // @anchor:dictionarymanager-updateconflictstatus-end
   
-  // @anchor:dictionarymanager-renderdictionarieslist-start
-  // @desc:Отрисовывает список словарей
   renderDictionariesList() {
     const tbody = document.getElementById('dictionaries-table-body'); tbody.innerHTML = '';
     for (let n in this.dictionaries) {
@@ -2932,14 +2369,11 @@ class DictionaryManager {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = this.activeDictionaries.has(n); cb.dataset.dictName = n; cb.addEventListener('change', (e) => this.toggleDictionary(e.target.dataset.dictName));
       const td1 = document.createElement('td'); td1.appendChild(cb);
       const td2 = document.createElement('td'); td2.textContent = n;
-      const td3 = document.createElement('td'); td3.innerHTML = `<button class="export-dict-btn" data-dict-name="${n}">Экспорт</button><button class="delete-dict-btn" data-dict-name="${n}">Удалить</button>`;
+      const td3 = document.createElement('td'); td3.innerHTML = `<button class="export-dict-btn" data-dict-name="${n}">Экспорт</button><button class="rename-dict-btn" data-dict-name="${n}">Переименовать</button><button class="delete-dict-btn" data-dict-name="${n}">Удалить</button>`;
       row.appendChild(td1); row.appendChild(td2); row.appendChild(td3); tbody.appendChild(row);
     }
   }
-  // @anchor:dictionarymanager-renderdictionarieslist-end
   
-  // @anchor:dictionarymanager-rendershortcutstable-start
-  // @desc:Отрисовывает таблицу сокращений
   renderShortcutsTable() {
     const tbody = document.getElementById('shortcuts-table-body'); tbody.innerHTML = '';
     let dict = this.combinedActiveDictionary;
@@ -2951,10 +2385,7 @@ class DictionaryManager {
       row.appendChild(td1); row.appendChild(td2); tbody.appendChild(row);
     }
   }
-  // @anchor:dictionarymanager-rendershortcutstable-end
   
-  // @anchor:dictionarymanager-addorupdateshortcut-start
-  // @desc:Добавляет или обновляет сокращение
   addOrUpdateShortcut(shortcut, replacement) {
     if (!shortcut || !shortcut.trim()) { DOMUtils.showError(document.getElementById('shortcut-error'), 'Сокращение не может быть пустым'); return false; }
     shortcut = shortcut.trim(); replacement = replacement || '';
@@ -2964,10 +2395,7 @@ class DictionaryManager {
     else { const target = this.selectedDictionaryName || this.activeDictionaries.values().next().value || 'default'; if (!this.dictionaries[target]) this.dictionaries[target] = {}; this.dictionaries[target][shortcut] = replacement; }
     this.saveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.selectShortcut(shortcut); this.renderDictionariesList(); this.updateConflictStatus(); DOMUtils.clearError(document.getElementById('shortcut-error')); return true;
   }
-  // @anchor:dictionarymanager-addorupdateshortcut-end
   
-  // @anchor:dictionarymanager-deleteshortcut-start
-  // @desc:Удаляет сокращение
   deleteShortcut(shortcut) {
     if (!shortcut) return false;
     let found = null;
@@ -2975,58 +2403,33 @@ class DictionaryManager {
     if (found && confirm(`Удалить "${shortcut}" из "${found}"?`)) { delete this.dictionaries[found][shortcut]; this.saveDictionaries(); this.rebuildActiveDictionary(); this.checkConflicts(); this.renderShortcutsTable(); this.selectedShortcut = null; this.clearEditFields(); this.renderDictionariesList(); this.updateConflictStatus(); return true; }
     return false;
   }
-  // @anchor:dictionarymanager-deleteshortcut-end
   
-  // @anchor:dictionarymanager-setupeventlisteners-start
-  // @desc:Настраивает обработчики событий интерфейса словарей
   setupEventListeners() {
-    document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', (e) => { const id = e.target.dataset.tab; document.querySelectorAll('[id$="-tab"]').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
+    document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', (e) => { const id = e.target.dataset.tab; document.querySelectorAll('#editor-tab, #dictionary-tab, #modules-tab').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
     document.getElementById('shortcuts-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.shortcut) this.selectShortcut(row.dataset.shortcut); });
-    document.getElementById('dictionaries-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.dictName) { this.selectedShortcut = null; document.querySelectorAll('#dictionaries-table-body tr').forEach(r => r.classList.remove('selected')); row.classList.add('selected'); this.selectedDictionaryName = row.dataset.dictName; this.clearEditFields(); this.renderShortcutsTable(); this.updateCurrentDictNameDisplay(); } if (e.target.classList.contains('export-dict-btn')) this.exportDictionary(e.target.dataset.dictName); if (e.target.classList.contains('delete-dict-btn')) this.removeDictionary(e.target.dataset.dictName); });
+    document.getElementById('dictionaries-table-body').addEventListener('click', (e) => { const row = e.target.closest('tr'); if (row && row.dataset.dictName) { this.selectedShortcut = null; document.querySelectorAll('#dictionaries-table-body tr').forEach(r => r.classList.remove('selected')); row.classList.add('selected'); this.selectedDictionaryName = row.dataset.dictName; this.clearEditFields(); this.renderShortcutsTable(); this.updateCurrentDictNameDisplay(); } if (e.target.classList.contains('export-dict-btn')) this.exportDictionary(e.target.dataset.dictName); if (e.target.classList.contains('delete-dict-btn')) this.removeDictionary(e.target.dataset.dictName); if (e.target.classList.contains('rename-dict-btn')) this.renameDictionary(e.target.dataset.dictName); });
     document.getElementById('save-shortcut-btn').addEventListener('click', () => this.addOrUpdateShortcut(document.getElementById('edit-shortcut').value, document.getElementById('edit-replacement').value));
     document.getElementById('delete-shortcut-btn').addEventListener('click', () => this.deleteShortcut(document.getElementById('edit-shortcut').value));
   }
-  // @anchor:dictionarymanager-setupeventlisteners-end
   
-  // @anchor:dictionarymanager-setupdropzone-start
-  // @desc:Настраивает зону drag-and-drop для словарей
   setupDropZone() {
     const dz = document.getElementById('dict-drop-zone');
     if (!dz) return;
+    dz.addEventListener('click', () => this.createNewDictionary());
     dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
     dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) { let name = file.name; if (name.endsWith('.txt')) name = name.slice(0,-4); if (this.dictionaries[name] && !confirm(`Заменить "${name}"?`)) return; this.loadDictionaryFromFile(file, name); } });
   }
-  // @anchor:dictionarymanager-setupdropzone-end
   
-  // @anchor:dictionarymanager-selectshortcut-start
-  // @desc:Выбирает сокращение для редактирования
   selectShortcut(shortcut) { this.selectedShortcut = shortcut; document.querySelectorAll('#shortcuts-table-body tr').forEach(r => r.classList.remove('selected')); const row = document.querySelector(`#shortcuts-table-body tr[data-shortcut="${shortcut}"]`); if (row) row.classList.add('selected'); document.getElementById('edit-shortcut').value = shortcut; let dict = this.combinedActiveDictionary; if (this.selectedDictionaryName && this.dictionaries[this.selectedDictionaryName]) dict = this.dictionaries[this.selectedDictionaryName]; document.getElementById('edit-replacement').value = dict[shortcut] || ''; this.updateButtonsState(); DOMUtils.clearError(document.getElementById('shortcut-error')); }
-  // @anchor:dictionarymanager-selectshortcut-end
-  
-  // @anchor:dictionarymanager-cleareditfields-start
-  // @desc:Очищает поля редактирования сокращения
   clearEditFields() { document.getElementById('edit-shortcut').value = ''; document.getElementById('edit-replacement').value = ''; this.updateButtonsState(); DOMUtils.clearError(document.getElementById('shortcut-error')); }
-  // @anchor:dictionarymanager-cleareditfields-end
-  
-  // @anchor:dictionarymanager-updatebuttonsstate-start
-  // @desc:Обновляет состояние кнопок в зависимости от выбранного сокращения
   updateButtonsState() { const del = document.getElementById('delete-shortcut-btn'); const shortcut = document.getElementById('edit-shortcut').value; let exists = false; for (let n in this.dictionaries) if (this.dictionaries[n][shortcut] !== undefined) { exists = true; break; } del.disabled = !exists; }
-  // @anchor:dictionarymanager-updatebuttonsstate-end
-  
-  // @anchor:dictionarymanager-updatecurrentdictnamedisplay-start
-  // @desc:Обновляет заголовок панели редактирования словаря
   updateCurrentDictNameDisplay() { const el = document.getElementById('editing-dict-title'); if (this.selectedDictionaryName) el.textContent = `Редактирование словаря "${this.selectedDictionaryName}"`; else el.textContent = 'Редактирование словаря'; }
-  // @anchor:dictionarymanager-updatecurrentdictnamedisplay-end
 }
-// @anchor:class-dictionarymanager-end
+// <class-dictionarymanager]
 
-// === [JS] Инициализация ===
-// @anchor:init-domcontentloaded-start
-// @desc:Точка входа при загрузке DOM
+// [init-domcontentloaded>
 document.addEventListener('DOMContentLoaded', () => {
-  // @anchor:init-title-animation-start
-  // @desc:Анимация заголовка при клике
   const title = document.getElementById('animated-title');
   if (title) {
     const seq = ['|','n|','nw|','NW','NoWa','NotWar','NoteWarp'];
@@ -3040,18 +2443,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 200);
     });
   }
-  // @anchor:init-title-animation-end
   
-  // @anchor:init-create-instances-start
-  // @desc:Создание экземпляров основных классов
   const dict = new DictionaryManager();
   const fb = new FeedbackManager();
   const ed = new TextEditor(document.getElementById('editor'), dict, fb);
   window.editor = ed;
-  // @anchor:init-create-instances-end
   
-  // @anchor:init-jumpchar-listener-start
-  // @desc:Слушатель изменения символа перехода в настройках
   const jumpCharInput = document.getElementById('jump-char-input');
   if (jumpCharInput) {
     jumpCharInput.addEventListener('change', (e) => {
@@ -3070,49 +2467,65 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  // @anchor:init-jumpchar-listener-end
   
-  // @anchor:init-settings-popup-start
-  // @desc:Настройка открытия/закрытия попапа настроек
-  const settingsBtn = document.getElementById('settings-button'), closeSettings = document.getElementById('close-settings-btn'), settingsPopup = document.getElementById('settings-popup');
-  settingsBtn.addEventListener('click', () => settingsPopup.style.display = 'flex');
-  closeSettings.addEventListener('click', () => settingsPopup.style.display = 'none');
-  // @anchor:init-settings-popup-end
+  const settingsBtn = document.getElementById('settings-button');
+  const closeSettings = document.getElementById('close-settings-btn');
+  const settingsPopup = document.getElementById('settings-popup');
+  if (settingsBtn && closeSettings && settingsPopup) {
+    settingsBtn.addEventListener('click', () => settingsPopup.style.display = 'flex');
+    closeSettings.addEventListener('click', () => settingsPopup.style.display = 'none');
+  }
   
-  // @anchor:init-help-popup-start
-  // @desc:Настройка открытия/закрытия попапа справки
-  const helpBtn = document.getElementById('help-button'), helpPopup = document.getElementById('help-popup'), closeHelp = document.getElementById('close-help-btn');
-  helpBtn.addEventListener('click', () => helpPopup.style.display = 'flex');
-  closeHelp.addEventListener('click', () => helpPopup.style.display = 'none');
-  document.querySelectorAll('.help-tab').forEach(tab => tab.addEventListener('click', () => { const name = tab.dataset.tab; document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active')); tab.classList.add('active'); document.getElementById(`${name}-tab`).classList.add('active'); }));
-  document.querySelector('.help-tab[data-tab="help-editor"]').click();
-  // @anchor:init-help-popup-end
+  const helpBtn = document.getElementById('help-button');
+  const helpPopup = document.getElementById('help-popup');
+  const closeHelp = document.getElementById('close-help-btn');
+  if (helpBtn && helpPopup && closeHelp) {
+    // Флаг для отслеживания первого открытия
+    let isFirstOpen = true;
+    
+    helpBtn.addEventListener('click', () => {
+      helpPopup.style.display = 'flex';
+      
+      // Активация первой вкладки при первом открытии
+      if (isFirstOpen) {
+        isFirstOpen = false;
+        const editorTab = document.querySelector('.help-tab[data-tab="help-editor"]');
+        const editorContent = document.getElementById('help-editor-tab');
+        if (editorTab) editorTab.classList.add('active');
+        if (editorContent) editorContent.classList.add('active');
+      }
+    });
+    
+    closeHelp.addEventListener('click', () => helpPopup.style.display = 'none');
+    
+    document.querySelectorAll('.help-tab').forEach(tab => tab.addEventListener('click', () => {
+      const name = tab.dataset.tab;
+      document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`${name}-tab`).classList.add('active');
+    }));
+  }
   
-  // @anchor:init-popup-close-start
-  // @desc:Закрытие попапов по клику на оверлей и по Escape
-  [settingsPopup, helpPopup].forEach(p => p.addEventListener('click', (e) => { if (e.target === p) p.style.display = 'none'; }));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { settingsPopup.style.display = 'none'; helpPopup.style.display = 'none'; } });
-  // @anchor:init-popup-close-end
+  [settingsPopup, helpPopup].forEach(p => {
+    if (p) {
+      p.addEventListener('click', (e) => {
+        if (e.target === p) p.style.display = 'none';
+      });
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (settingsPopup) settingsPopup.style.display = 'none';
+      if (helpPopup) helpPopup.style.display = 'none';
+    }
+  });
   
-  // @anchor:init-focus-start
-  // @desc:Фокусировка редактора и первичная валидация
   ed.editor.focus();
   setTimeout(() => ed.validator.validate(), 500);
-  // @anchor:init-focus-end
 });
-// @anchor:init-domcontentloaded-end
-
-// @anchor:init-window-load-start
-// @desc:Принудительное обновление кнопок модулей после полной загрузки
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (window.editor && window.editor.moduleManager) {
-            console.log('🔄 Принудительное обновление кнопок модулей...');
-            window.editor.moduleManager.refreshAllButtons();
-        }
-    }, 200);
-});
-// @anchor:init-window-load-end
+// <init-domcontentloaded]
 </script>
+<!-- <scripts] -->
 </body>
 </html>
