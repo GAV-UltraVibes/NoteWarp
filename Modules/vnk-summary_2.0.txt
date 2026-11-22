@@ -1,0 +1,351 @@
+// ===== VnkSummary 2.0 — автозаключение УЗДС вен нижних конечностей для NoteWarp =====
+var VNK_GEN = {
+  'fem|общ':'общей бедренной вены','fem|глубок':'глубокой бедренной вены','fem|поверхностн':'поверхностной бедренной вены',
+  'pop|':'подколенной вены','tib|задн':'задних большеберцовых вен','tib|передн':'передних большеберцовых вен',
+  'iliac|наружн':'наружной подвздошной вены','iliac|общ':'общей подвздошной вены','iliac|внутренн':'внутренней подвздошной вены',
+  'sur|медиальн':'медиальной группы суральных вен','sur|латеральн':'латеральной группы суральных вен',
+  'sur|срединн':'срединной группы суральных вен','sur|':'суральных вен'
+};
+var VNK_PREP = {
+  'общей бедренной вены':'общей бедренной вене','глубокой бедренной вены':'глубокой бедренной вене',
+  'поверхностной бедренной вены':'поверхностной бедренной вене','подколенной вены':'подколенной вене',
+  'задних большеберцовых вен':'задних большеберцовых венах','передних большеберцовых вен':'передних большеберцовых венах',
+  'наружной подвздошной вены':'наружной подвздошной вене','общей подвздошной вены':'общей подвздошной вене',
+  'внутренней подвздошной вены':'внутренней подвздошной вене','медиальной группы суральных вен':'медиальной группе суральных вен',
+  'латеральной группы суральных вен':'латеральной группе суральных вен','срединной группы суральных вен':'срединной группе суральных вен',
+  'суральных вен':'суральных венах'
+};
+var VNK_RANK = {'fem|общ':5.3,'fem|поверхностн':5.1,'fem|глубок':5.0,'iliac|общ':7,'iliac|наружн':6,'iliac|внутренн':6,
+  'pop|':3,'sur|медиальн':2,'sur|латеральн':2,'sur|срединн':2,'sur|':2,'tib|задн':1,'tib|передн':1};
+var VNK_ABBR = {'ОБВ':'fem|общ','ГБВ':'fem|глубок','ПБВ':'fem|поверхностн','ПКВ':'pop|','ЗББВ':'tib|задн',
+  'ПББВ':'tib|передн','НПВ':'iliac|наружн','ОПВ':'iliac|общ'};
+var VNK_ADJ = ['общ','глубок','поверхностн','наружн','внутренн','задн','передн','медиальн','латеральн','срединн'];
+var VNK_NOUN = /бедрен[а-яё]*|подвздошн[а-яё]*|бол[а-яё]*берцов[а-яё]*|сурал[а-яё]*|подк[а-яё]*лен[а-яё]*/gi;
+var VNK_SIDE = {right:'справа',left:'слева',both:'с обеих сторон'};
+var VNK_LIMB = {right:'правой нижней конечности',left:'левой нижней конечности',both:'нижних конечностей'};
+var VNK_SV = {GSV:{re:/(?:^|[^А-ЯЁ])БПВ(?![А-ЯЁ])|больш[а-яё]*\s+подкожн[а-яё]*\s+вен[а-яё]*/i,gen:'большой подкожной вены'},
+              SSV:{re:/(?:^|[^А-ЯЁ])МПВ(?![А-ЯЁ])|мал[а-яё]*\s+подкожн[а-яё]*\s+вен[а-яё]*/i,gen:'малой подкожной вены'}};
+var VNK_INCOMP = /(не)?сост[а-яё]{0,3}т[а-яё]{0,2}л[а-яё]{0,4}/i;   // терпим опечатки
+var VNK_VARIX  = /вар[а-яё]{0,4}зн[а-яё]*\s*(измен|расшир)/i;
+var VNK_RECAN = [
+  [/от начальной до частичной/i,'реканизация от начальной до частичной'],
+  [/от частичной (мультиканальной )?до полной/i,'реканизация от частичной до полной'],
+  [/полн[а-яё]*[^.]{0,20}реканализаци|реканализаци[а-яё]*[^.]{0,20}полн|стеноз\s*(менее|<)\s*[12]?\d\s*%/i,'полная реканализация'],
+  [/частичн[а-яё]*[^.]{0,25}реканализаци|реканализаци[а-яё]*[^.]{0,20}частичн|мультиканальн|многоканальн/i,'частичная реканализация'],
+  [/начальн[а-яё]*[^.]{0,25}реканализаци|реканализаци[а-яё]*[^.]{0,20}начальн/i,'начальная реканализация']];
+var VNK_STOP = /аневризм|аплаз|гипоплаз|мальформац|кист[аы] Бейкера|лимфангит|липодерматосклероз|инфильтрат|стент|шунт|тромбэктом/i;
+var VNK_VOCAB = ('большая малая подкожная подкожные вена вены вен соустье соустья сафенофеморальное сафенопоплитеальное '+
+ 'состоятельно несостоятельно состоятельны несостоятельны диаметр мм не расширена расширен расширены полностью сжимаема сжимаемы '+
+ 'в на от до по из и с к средней трети бедра голени клапаны ствола ствол стволы приток притоки варикозно изменены изменён '+
+ 'дренируется совместно суральными венами коагулирована оперативно удалена удалён лигирована окклюзировано тромбирована культя '+
+ 'культи основной переднелатеральный заднемедиальный добавочный перфорант перфорантная выявлена выявлены медиальной поверхности '+
+ 'верхней нижней проксимальный сегмент гипоэхогенные массы пристеночные тяжи реканализация начальная частичная полная флотации '+
+ 'флотация выявлено флотирует верхушка уровне колена фиксирована стенке рассыпного типа локально равномерно БПВ МПВ ПКЛВ').split(' ');
+
+var VnkSummary = {
+  id:"vnk-summary", name:"ВНК: автозаключение", version:"2.0",
+  description:"Собирает ЗАКЛЮЧЕНИЕ из описания: постоперационные состояния, тромбозы и флотация, посттромботические изменения, рефлюкс соустьев/стволов/перфорантов, варикоз, признаки затруднения венозного оттока. Нормализация применяется только к копии для разбора — текст в редакторе не изменяется.",
+  syntax:"Кнопка «🩺 Заключение ВНК» или Alt+Z (Alt+Я). Заменяется блок от «ЗАКЛЮЧЕНИЕ:» до пустой строки / строки «Врач:».\n«🔎 Разбор ВНК» — факты, нераспознанные фразы и переключатель «окклюзия / затруднение оттока / косвенные признаки».\nНедостающие числа выводятся меткой * (переход Alt+X).",
+  CONFIG:{ hotkeys:["Alt+Z","Alt+Я"], normalize:true, sideOrder:["right","left"], subsumeTrunk:true,
+           evlkDefault:true, placeholders:true, outflowMode:"auto", supineNote:true },
+  last:null, _hk:false,
+
+  toolbarButton:{ text:"🩺 Заключение ВНК", title:"Собрать ЗАКЛЮЧЕНИЕ (Alt+Z)", onClick:function(api){ VnkSummary.run(api); } },
+  init:function(api){ this.hotkeys(api); },
+  onEnable:function(api){ this.hotkeys(api); this.infoButton(api); },
+  onDisable:function(){ var b=document.getElementById("vnk-info-btn"); if(b) b.remove(); },
+  process:function(text,cursorPos){ return {text:text,cursorPos:cursorPos}; },
+
+  /* ---------- мост к редактору ---------- */
+  io:function(api){ var ed=window.editor; return {
+    get:function(){ return api&&api.getText?api.getText():(ed?ed.editor.value:""); },
+    set:function(t,c){ if(api&&api.setText) api.setText(t,c); else if(ed){ ed.saveHistoryState(); ed.editor.value=t; ed.setCursorPosition(c);} if(ed) ed.editor.focus(); },
+    hint:function(m,d){ if(api&&api.showHint) api.showHint(m,d); else if(ed) ed.showHint(m,d); },
+    ok:function(){ try{ window.editor.feedbackManager.triggerFeedback(); }catch(e){} },
+    sel:function(a,b){ if(ed){ ed.editor.focus(); ed.selectText(a,b); } },
+    star:function(){ return (ed&&ed.jumpChar)||"*"; } }; },
+  hotkeys:function(api){ if(this._hk) return; this._hk=true; var self=this;
+    if(api&&api.registerHotkey){ this.CONFIG.hotkeys.forEach(function(k){ api.registerHotkey(k,function(){ self.run(api); }); }); return; }
+    var ed=window.editor; if(ed&&ed.moduleHotkeys) this.CONFIG.hotkeys.forEach(function(k){
+      if(!ed.moduleHotkeys.some(function(h){return h.key===k;})) ed.moduleHotkeys.push({key:k,handler:function(){ self.run(api); }}); }); },
+
+  /* ---------- нормализация (только для разбора) ---------- */
+  splitMerged:function(tok){ var low=tok.toLowerCase(); if(VNK_VOCAB.indexOf(low)>=0||tok.length<6) return tok;
+    var n=tok.length,best=new Array(n+1),i,j,p; best[0]=[];
+    for(i=0;i<n;i++){ if(!best[i]) continue;
+      for(j=i+1;j<=Math.min(n,i+22);j++){ p=low.slice(i,j);
+        if(VNK_VOCAB.indexOf(p)>=0 && (!best[j]||best[j].length>best[i].length+1)) best[j]=best[i].concat([tok.slice(i,j)]); } }
+    return best[n]&&best[n].length>1?best[n].join(" "):tok; },
+  normalize:function(t){ if(!this.CONFIG.normalize) return t; var self=this;
+    t=t.replace(/(\d)(мм|см)/gi,"$1 $2").replace(/([а-яё])(?=\d)/gi,"$1 ")
+       .replace(/([а-яё])(?=[А-ЯЁ]{2,})/g,"$1 ").replace(/([А-ЯЁ]{2})(?=[а-яё])/g,"$1 ");
+    return t.replace(/[А-Яа-яЁё]{6,}/g,function(m){ return self.splitMerged(m); }); },
+
+  /* ---------- утилиты ---------- */
+  sentences:function(s){ var out=[],buf="",i,j;
+    for(i=0;i<s.length;i++){ buf+=s[i];
+      if((s[i]==="."||s[i]===";")&&/\s/.test(s[i+1]||"")){ j=i+1; while(j<s.length&&/\s/.test(s[j])) j++;
+        if(!/[a-zа-яё]/.test(s[j]||"")){ out.push(buf); buf=""; } } }
+    if(buf.trim()) out.push(buf); return out; },
+  sideOf:function(t){ if(/с обеих сторон|с двух сторон|с обеих стлорон/i.test(t)) return "both";
+    if(/(?:^|[^а-яё])справа/i.test(t)) return "right"; if(/(?:^|[^а-яё])слева/i.test(t)) return "left"; return null; },
+  cap:function(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; },
+  veinsOf:function(t){ var out=[],used=[],m,i,re=/(?:^|[^А-ЯЁ])(ОБВ|ГБВ|ПБВ|ПКВ|ЗББВ|ПББВ|НПВ|ОПВ)(?![А-ЯЁ])/g;
+    while((m=re.exec(t))){ out.push([m.index,m.index,VNK_ABBR[m[1]]]); used.push([m.index,m.index+m[0].length]); }
+    var nouns=[],nn; VNK_NOUN.lastIndex=0; while((nn=VNK_NOUN.exec(t))) nouns.push(nn);
+    for(i=0;i<nouns.length;i++){ var nm=nouns[i];
+      if(used.some(function(u){ return u[0]<=nm.index&&nm.index<u[1]; })) continue;
+      var left=i?nouns[i-1].index+nouns[i-1][0].length:0, win=t.slice(left,nm.index), adjs=[];
+      VNK_ADJ.forEach(function(a){ var mm=new RegExp(a+"[а-яё]*","i").exec(win); if(mm) adjs.push([mm.index,a]); });
+      adjs.sort(function(a,b){ return a[0]-b[0]; });
+      var w=nm[0].toLowerCase(),fam,ok,dflt;
+      if(w.indexOf("бедрен")===0){ fam="fem"; ok=["общ","глубок","поверхностн"]; dflt="поверхностн"; }
+      else if(w.indexOf("подвздошн")===0){ fam="iliac"; ok=["наружн","общ","внутренн"]; dflt="наружн"; }
+      else if(w.indexOf("берцов")>0){ fam="tib"; ok=["задн","передн"]; dflt="задн"; }
+      else if(w.indexOf("сурал")===0){ fam="sur"; ok=["медиальн","латеральн","срединн"]; dflt=""; }
+      else { fam="pop"; ok=[]; dflt=""; }
+      var sel=adjs.filter(function(a){ return ok.indexOf(a[1])>=0; }); if(!sel.length) sel=[[0,dflt]];
+      sel.forEach(function(a){ out.push([nm.index,a[0],fam+"|"+a[1]]); }); }
+    out.sort(function(a,b){ return a[0]-b[0]||a[1]-b[1]; });
+    var seen={},res=[]; out.forEach(function(o){ if(!seen[o[2]]&&VNK_GEN[o[2]]){ seen[o[2]]=1; res.push(o[2]); } }); return res; },
+  recanOf:function(t){ for(var i=0;i<VNK_RECAN.length;i++) if(VNK_RECAN[i][0].test(t)) return VNK_RECAN[i][1]; return null; },
+
+  /* ---------- глубокие вены ---------- */
+  deepFact:function(t,side){
+    var z=t.split(/верхушк/i), body=z[0], ap=z.length>1?"верхушк"+z.slice(1).join("верхушк"):"";
+    var f={side:side,veins:this.veinsOf(body),src:t};
+    f.oneTrunk=/одного из стволов|один из стволов/i.test(body);
+    f.masses=/массы|тяжи|наложен|тромбирован|несжимаем|окклюз/i.test(body);
+    f.fresh=/гипоэхоген|гетероген/i.test(body);
+    f.strands=/тяжи|стенки[^.]{0,30}(уплотн|утолщ)|створки неподвижны/i.test(body);
+    f.nonoccl=/неокклюзир|неокклюзивн|пристеночн[а-яё]* кровоток|стеноз \d/i.test(t);
+    f.occl=!f.nonoccl&&/(?:^|[^а-яё])окклюз|несжимаем|кровоток не (определя|визуализ)/i.test(t);
+    f.recan=this.recanOf(t);
+    var m=/флотаци[а-яё]*[^.]{0,25}?(\d+[.,]?\d*)\s*(см|мм)/i.exec(t)||/(?:подвижн[а-яё]*|протяжении|протяжённостью|длиной)[^.]{0,45}?(\d+[.,]?\d*)\s*(см|мм)/i.exec(t);
+    f.float=m?m[1].replace(".",",")+" "+m[2].toLowerCase():null;
+    var b=/основани[а-яё]*[^.]{0,15}?(\d+[.,]?\d*)\s*мм/i.exec(t); f.base=b?b[1].replace(".",",")+" мм":null;
+    f.nofloat=/без флотаци|флотаци[а-яё]* не (выявлен|определ)|не флотиру|фиксирован[а-яё]* к стенк/i.test(t);
+    f.apexNone=/верхушка не визуализирован|визуализация верхушки затруднена/i.test(t);
+    var ma=/верхушк[а-яё]*[^.]{0,45}?((?:на уровне|в|от)\s+[^.]{4,70}?)(?:,|\.|$)/i.exec(ap);
+    f.apex=ma?ma[1].trim():null;
+    f.valves=/клапан[а-яё]*[^.]{0,30}несост|несост[а-яё]*[^.]{0,20}клапан/i.test(t);
+    f.thin=/створки[^.]{0,15}тонкие подвижные/i.test(t);
+    f.compress=/полностью сжимаем|компрессия (полная|практически полная)|просветы? свобод/i.test(t);
+    f.outflow=/компрессия с усилием|сжимаемы с усилием|давление компрессии|фазность[^.]{0,25}(снижен|отсутств)|без дыхательной фазности|передаточная пульсация|отёк конечности|кровоток замедлен/i.test(t);
+    f.noflow=/фазность отсутствует|давление компрессии сопоставимо|кровоток не (определя|визуализ)|отёк конечности до паха/i.test(t);
+    return f; },
+  deepRender:function(f,supine,star){
+    var out=[],vs=f.veins,prox=0,s=f.side,C=this.CONFIG;
+    vs.forEach(function(k){ prox=Math.max(prox,VNK_RANK[k]); });
+    var acute=f.masses&&(f.fresh||f.apex||f.apexNone||f["float"]||(f.occl&&!f.recan));
+    var pts=(f.valves||f.recan)&&!f.thin&&(f.strands||f.recan||(!f.masses&&f.compress))&&!(acute&&f.fresh&&!f.strands);
+    function vlist(){ if(!vs.length||prox>=5||vs.length>=3) return "глубоких вен "+VNK_LIMB[s];
+      var names=vs.map(function(k){ return VNK_GEN[k]; });
+      if(f.oneTrunk&&names.length===1) return "одного из стволов "+names[0].replace("задних большеберцовых вен","задней большеберцовой вены")+" "+VNK_SIDE[s];
+      return names.join(" и ")+" "+VNK_SIDE[s]; }
+    if(acute){
+      var head=prox>=6?("Илиофеморальный тромбоз "+VNK_SIDE[s]):("Тромбоз "+vlist());
+      if(f.nonoccl&&prox<6) head=head.replace("Тромбоз","Неокклюзирующий тромбоз");
+      var tail=[];
+      if(f.recan) tail.push(f.recan);
+      if(f.apexNone) tail.push("верхушка не визуализирована");
+      else if(f.apex) tail.push("верхушка "+f.apex);
+      else if(vs.length){ var top=vs[0]; vs.forEach(function(k){ if(VNK_RANK[k]>VNK_RANK[top]) top=k; }); tail.push("верхушка в "+VNK_PREP[VNK_GEN[top]]); }
+      else if(C.placeholders) tail.push("верхушка "+star);
+      if(f["float"]) tail.push("флотация "+f["float"]+(f.base?" на основании "+f.base:""));
+      else if(f.nofloat) tail.push("флотации не выявлено"+(supine&&C.supineNote?" (в положении лёжа)":""));
+      else if(C.placeholders) tail.push("флотация "+star);
+      out.push(head+(tail.length?", "+tail.join(", "):"")+"."); }
+    if(pts){ var rec=f.recan||(f.compress?"полная реканализация":"реканизация");
+      out.push("Посттромботические изменения "+vlist()+", "+rec+(f.valves?", несостоятельность клапанов.":".")); }
+    if(f.valves&&f.thin) out.push("Несостоятельность клапанов "+vs.map(function(k){return VNK_GEN[k];}).join(" и ")+".");
+    if(f.outflow){ var mode=C.outflowMode;
+      if(mode==="auto") mode=f.noflow?"occl":(/снижен|с усилием|замедлен/i.test(f.src)?"diff":"indirect");
+      if(mode==="indirect") out.push("Косвенные признаки проксимальной компрессии"+(s?" "+VNK_SIDE[s]:"")+".");
+      else out.push("Признаки "+(mode==="occl"?"окклюзии":"затруднения венозного оттока")+" на уровне подвздошных вен "+VNK_SIDE[s]+" (тромбоз? компрессия?)."); }
+    return out; },
+
+  /* ---------- подкожные вены ---------- */
+  subFact:function(t,side,vein){
+    var f={side:side,vein:vein,src:t};
+    var inc=VNK_INCOMP.exec(t);
+    f.sfj=/сафено[-\s]?феморальн[а-яё]*\s*соусть[а-яё]*|(?:^|[^А-ЯЁ])СФС/i.test(t)?(inc?!inc[1]:null):null;
+    f.spj=/сафено[-\s]?поплитеальн[а-яё]*\s*соусть[а-яё]*|(?:^|[^А-ЯЁ])СПС/i.test(t)?(inc?!inc[1]:null):null;
+    f.trunk=/клапан[а-яё]*\s*ствол[а-яё]*/i.test(t)?(inc?!inc[1]:null):null;
+    f.perf=/перфорант/i.test(t)&&/несост/i.test(t);
+    f.region=[/бедр/i.test(t)&&"бедра",/голен/i.test(t)&&"голени"].filter(Boolean).join(" и ");
+    f.drained=/дренируем\w*\s+(приток|подкожн)/i.test(t)&&VNK_VARIX.test(t);
+    f.varix=VNK_VARIX.test(t)?(/ствол[а-яё]*\s+и\s+приток/i.test(t)?"trunk+trib":/приток/i.test(t)?"trib":"trunk"):null;
+    f.accessory=(/переднелатеральн/i.test(t)&&"переднелатерального")||(/заднемедиальн/i.test(t)&&"заднемедиального")||null;
+    if(/оперативно удален|сафенэктоми/i.test(t)) f.postop="сафенэктомии";
+    else if(/лигирован[а-яё]* в соустье|проксимальный сегмент[^.]{0,25}оперативно удалён|Троянов/i.test(t)) f.postop="операции Троянова";
+    else if(/коагулирован/i.test(t)) f.postop=(/РЧА/.test(t)||!this.CONFIG.evlkDefault)?"РЧА":"ЭВЛК";
+    else if(/кроссэктоми/i.test(t)) f.postop="кроссэктомии";
+    var st=/культя[^.]{0,15}?(\d+[.,]?\d*)\s*см/i.exec(t); f.stump=st?st[1].replace(".",",")+" см":null;
+    f.mainOnly=/основной ствол/i.test(t)&&/удалён|удалена|коагулирован/i.test(t);
+    f.masses=/массы|тяжи|тромбирован|несжимаем|окклюз/i.test(t);
+    f.fresh=/гипоэхоген|гетероген/i.test(t);
+    f.recan=this.recanOf(t);
+    f.oblit=/облитерирован|облитерац|смыкани/i.test(t);
+    f.phlebitis=f.masses&&(f.fresh||/верхушк|флотиру|флотаци/i.test(t));
+    f.ptsSub=!f.phlebitis&&(f.recan||/тяжи|посттромбофлебитич|облитерирован|флеболит/i.test(t));
+    var m=/флотаци[а-яё]*[^.]{0,25}?(\d+[.,]?\d*)\s*(см|мм)/i.exec(t)||/подвижн[а-яё]*[^.]{0,40}?(\d+[.,]?\d*)\s*(см|мм)/i.exec(t);
+    f.float=m?m[1].replace(".",",")+" "+m[2].toLowerCase():null;
+    f.nofloat=/без флотаци|флотаци[а-яё]* не выявлен|не флотиру|фиксирован[а-яё]* к стенк/i.test(t);
+    var ma=/верхушк[а-яё]*[^.]{0,40}?((?:на уровне|в)\s+[^.]{4,60}?)(?:,|\.|$)/i.exec(t); f.apex=ma?ma[1].trim():null;
+    f.spread=/распространен[а-яё]*|переходящ[а-яё]*|по перфоранту/i.test(t)&&/суральн/i.test(t);
+    f.patent=/полностью сжимаем|прокрашива[а-яё]*\s+в\s+ЦДК/i.test(t);
+    f.phlebitisWall=/стенки[^.]{0,30}(отёчн|утолщ|гипоэхоген)|перивенозн/i.test(t)&&!f.masses;
+    return f; },
+  subRender:function(f,supine,star){
+    var out=[],g=VNK_SV[f.vein]?VNK_SV[f.vein].gen:"подкожной вены",s=f.side,C=this.CONFIG;
+    var veinName=f.accessory?(f.accessory+" ствола "+g):(f.varix==="trib"&&f.drained?"дренируемого притока":g);
+    if(f.postop){ var t="Состояние после "+f.postop+" "+(f.mainOnly?"основного ствола ":"")+g+" "+VNK_SIDE[s];
+      if(f.stump) t+=", культя "+f.stump; out.push(t+"."); }
+    if(f.phlebitis){ var tail=[];
+      if(f.recan) tail.push(f.recan);
+      if(f.apex) tail.push("верхушка "+f.apex); else if(C.placeholders) tail.push("верхушка "+star);
+      if(f["float"]) tail.push("флотация "+f["float"]);
+      else if(f.nofloat) tail.push("флотации не выявлено"+(supine&&C.supineNote?" (в положении лёжа)":""));
+      out.push("Тромбофлебит "+(f.varix?"варикозно изменённой ":"")+veinName+" "+VNK_SIDE[s]+(tail.length?", "+tail.join(", "):"")+
+        (f.spread?" с распространением на суральные вены":"")+"."); }
+    if(f.ptsSub) out.push("Посттромбофлебитические изменения "+veinName+" "+VNK_SIDE[s]+", "+(f.recan||(f.oblit?"облитерация":"полная реканализация"))+".");
+    if(f.phlebitisWall) out.push("Признаки флебита "+g+" "+VNK_SIDE[s]+".");
+    var ins=[];
+    if(f.sfj) ins.push("сафенофеморального соустья");
+    if(f.spj) ins.push("сафенопоплитеального соустья");
+    if(f.trunk&&!(C.subsumeTrunk&&(f.sfj||f.spj))) ins.push("клапанов ствола "+g);
+    if(f.perf) ins.push("перфорантных вен"+(f.region?" "+f.region:""));
+    var ch=[];
+    if(ins.length) ch.push("несостоятельность "+ins.join(", "));
+    if(f.varix==="trunk+trib") ch.push("варикозные изменения "+veinName+" с притоками");
+    else if(f.varix==="trib") ch.push("варикозные изменения "+(f.drained?"дренируемых притоков ":"притоков ")+g);
+    else if(f.varix==="trunk") ch.push("варикозные изменения "+veinName);
+    if(ch.length) out.push(this.cap(ch.join(", "))+" "+VNK_SIDE[s]+".");
+    return out; },
+
+  /* ---------- разбор документа ---------- */
+  conclusionRange:function(text){ var m=/^[ \t]*ЗАКЛЮЧЕНИЕ\s*:/im.exec(text); if(!m) return null;
+    var st=/\n[ \t]*\n|\n[ \t]*Врач\s*:/i.exec(text.slice(m.index));
+    return {start:m.index,end:st?m.index+st.index:text.length}; },
+  analyze:function(text){
+    var d=/^[ \t]*Врач\s*:/im.exec(text), body=d?text.slice(0,d.index):text;
+    var r=this.conclusionRange(body); if(r) body=body.slice(0,r.start)+body.slice(r.end);
+    var supine=/лёжа|клиностаз/i.test(body)||(!/в ортостазе/i.test(body)&&!/диаметр/i.test(body));
+    var raw=body.replace(/\u00A0/g," "), facts=[], unknown=[], stops=[], scope=null, side=null, vein=null, self=this;
+    raw.split(/\r?\n/).forEach(function(lineRaw){
+      var line=lineRaw.replace(/\t/g," ").trim(); if(!line) return;
+      if(/^(дуплексн|уздс|ультразвуков|цветовое|измерения\s+проводились|исследование затруднено)/i.test(line)){
+        if(/затруднено/i.test(line)) stops.push(line); return; }
+      var m;
+      if((m=/^глубокие\s+вены\s*:?\s*(.*)$/i.exec(line))){ scope="deep"; side=null; vein=null; line=m[1]; }
+      else if((m=/^подкожные\s+вены\s*:?\s*(.*)$/i.exec(line))){ scope="subcut"; side=null; vein=null; line=m[1]; }
+      else if((m=/^(справа|слева)\s*:?\s*(.*)$/i.exec(line))){ side=m[1].toLowerCase()==="справа"?"right":"left"; vein=null; line=m[2]; }
+      if(!line) return;
+      self.sentences(self.normalize(line)).forEach(function(s){
+        var t=s.replace(/\s+/g," ").trim(); if(!t) return;
+        var sd=self.sideOf(t)||side; if(self.sideOf(t)) side=sd;
+        if(VNK_STOP.test(t)){ stops.push(t); return; }
+        if(scope==="deep"){
+          if(/визуализированы общие|^остальные визуализированные/i.test(t)&&!/массы|тяжи|несост/i.test(t)){
+            facts.push({code:"patent",scope:"deep",src:t}); return; }
+          var f=self.deepFact(t,sd||"both"); f.code="deep"; facts.push(f);
+          if(!f.masses&&!f.valves&&!f.outflow&&!f.compress&&!/визуализирован/i.test(t)) unknown.push(t);
+        } else {
+          var v=/перфорант/i.test(t)&&!VNK_SV.GSV.re.test(t)&&!VNK_SV.SSV.re.test(t)?null:
+                (VNK_SV.GSV.re.test(t)?"GSV":VNK_SV.SSV.re.test(t)?"SSV":vein);
+          if(v) vein=v;
+          var sf=self.subFact(t,sd,v||"GSV"); sf.code="sub"; facts.push(sf);
+          if(sf.patent) facts.push({code:"patent",scope:"subcut",src:t});
+          if(!sf.postop&&!sf.varix&&!sf.perf&&sf.sfj===null&&sf.spj===null&&sf.trunk===null&&!sf.masses&&!sf.patent&&!sf.phlebitisWall)
+            unknown.push(t);
+        }
+      });
+    });
+    return {facts:facts,unknown:unknown,stops:stops,supine:supine}; },
+
+  /* ---------- сборка заключения ---------- */
+  build:function(r){
+    var self=this,C=this.CONFIG,star=(window.editor&&window.editor.jumpChar)||"*";
+    var by={right:[],left:[],both:[]}, patent={}, noReflux=true;
+    r.facts.forEach(function(f){
+      var arr=f.code==="deep"?self.deepRender(f,r.supine,star):f.code==="sub"?self.subRender(f,r.supine,star):[];
+      if(f.code==="patent"){ patent[f.scope]=true; return; }
+      if(arr.length){ (by[f.side||"both"]=by[f.side||"both"]||[]).push({f:f,lines:arr}); if(/несостоятельн/i.test(arr.join(" "))) noReflux=false; }
+    });
+    var order=C.sideOrder.concat(["both"]).filter(function(s){ return by[s]&&by[s].length; });
+    var multi=order.filter(function(s){ return s!=="both"; }).length>1;
+    var rank=function(x){ return x.f.postop?0:x.f.phlebitis||x.f.code==="deep"?1:2; };
+    var lines=[];
+    order.forEach(function(s){
+      var items=by[s].slice().sort(function(a,b){ return rank(a)-rank(b); });
+      var txt=items.map(function(x){ return x.lines.join(" "); }).join(" ");
+      lines.push(multi?((s==="both"?"С обеих сторон":self.cap(VNK_SIDE[s]))+": "+txt):txt);
+    });
+    if(noReflux&&!r.unknown.length&&!r.stops.length) lines.push("Клапанной недостаточности не выявлено.");
+    var deepOK=patent.deep&&!r.stops.length, subOK=patent.subcut&&!r.stops.length;
+    if(deepOK&&subOK) lines.push("Просветы глубоких и подкожных вен свободны.");
+    else if(deepOK) lines.push("Просветы глубоких вен свободны.");
+    if(!lines.length) return "";
+    return multi?"ЗАКЛЮЧЕНИЕ:\n"+lines.join("\n"):"ЗАКЛЮЧЕНИЕ: "+lines.join(" "); },
+
+  place:function(text,c){ var r=this.conclusionRange(text);
+    if(r) return {text:text.slice(0,r.start)+c+text.slice(r.end),cursor:r.start+c.length};
+    var d=/^[ \t]*Врач\s*:/im.exec(text);
+    if(d) return {text:text.slice(0,d.index)+c+"\n\n"+text.slice(d.index),cursor:d.index+c.length};
+    var tail=text.replace(/\s+$/,""); return {text:tail+"\n\n"+c+"\n",cursor:tail.length+2+c.length}; },
+  run:function(api){
+    var io=this.io(api),text=io.get();
+    if(!/подкожн[а-яё]*\s+вен|БПВ|МПВ/i.test(text)){ io.hint("❌ Не похоже на протокол ВНК",2500); return; }
+    var r=this.analyze(text); this.last=r;
+    var c=this.build(r);
+    if(!c){ io.hint("⚠️ Не удалось собрать заключение — см. «Разбор ВНК»",5000); return; }
+    var p=this.place(text,c); io.set(p.text,p.cursor); io.ok();
+    var warn=(r.unknown.length?" · ⚠️ не распознано: "+r.unknown.length:"")+(r.stops.length?" · ⛔ вне рутины: "+r.stops.length:"");
+    io.hint("✅ Заключение собрано"+warn,(r.unknown.length||r.stops.length)?6000:2500); },
+
+  /* ---------- панель разбора ---------- */
+  infoButton:function(api){ if(document.getElementById("vnk-info-btn")) return;
+    var p=document.querySelector(".tools-panel"); if(!p) return;
+    var b=document.createElement("button"); b.id="vnk-info-btn"; b.className="tool-btn"; b.textContent="🔎 Разбор ВНК";
+    b.style.backgroundColor="#6c757d"; b.title="Факты, нераспознанные фразы, режим оттока";
+    b.addEventListener("mousedown",function(e){ e.preventDefault(); });
+    b.onclick=function(){ VnkSummary.showInfo(api); }; p.appendChild(b); },
+  showInfo:function(api){
+    var io=this.io(api),text=io.get(),r=this.analyze(text),self=this; this.last=r;
+    var old=document.getElementById("vnk-info-popup"); if(old) old.remove();
+    var ov=document.createElement("div"); ov.id="vnk-info-popup"; ov.className="popup-overlay";
+    var box=document.createElement("div"); box.className="popup-content";
+    var h=document.createElement("h3"); h.textContent="Разбор ВНК"+(r.supine?" · положение лёжа":""); box.appendChild(h);
+    var pre=document.createElement("pre"); pre.style.cssText="white-space:pre-wrap;font-size:13px;background:#f5f5f5;padding:10px;border-radius:4px;";
+    pre.textContent=this.build(r)||"(не собрано)"; box.appendChild(pre);
+    var row=document.createElement("div"); row.style.cssText="margin:10px 0;font-size:13px;";
+    row.appendChild(document.createTextNode("Отток: "));
+    [["auto","авто"],["occl","окклюзия"],["diff","затруднение"],["indirect","косвенные"]].forEach(function(m){
+      var b=document.createElement("button"); b.textContent=m[1]; b.className="tool-btn";
+      b.style.cssText="padding:4px 8px;font-size:12px;margin-right:4px;"+(self.CONFIG.outflowMode===m[0]?"background:#007cba;":"background:#adb5bd;");
+      b.onclick=function(){ self.CONFIG.outflowMode=m[0]; self.showInfo(api); }; row.appendChild(b); });
+    box.appendChild(row);
+    var from=0;
+    function sect(title,items,color){ if(!items.length) return;
+      var t=document.createElement("div"); t.textContent=title; t.style.cssText="margin:10px 0 4px;font-weight:bold;color:"+color; box.appendChild(t);
+      items.forEach(function(it){ var d=document.createElement("div"); d.textContent=it.label;
+        d.style.cssText="font-size:12px;padding:3px 4px;border-bottom:1px solid #eee;cursor:pointer;";
+        d.onclick=function(){ var i=text.indexOf(it.src,from); if(i<0) i=text.indexOf(it.src.slice(0,30)); if(i>=0){ from=i; io.sel(i,i+it.src.length); } };
+        box.appendChild(d); }); }
+    sect("Факты",r.facts.filter(function(f){ return f.code!=="patent"; }).map(function(f){
+      var d=f.code==="deep"?(self.deepRender(f,r.supine,"*").join(" ")||"норма"):(self.subRender(f,r.supine,"*").join(" ")||"норма");
+      return {label:(VNK_SIDE[f.side]||"—")+" · "+d,src:f.src}; }),"#007cba");
+    sect("⚠️ Не распознано",r.unknown.map(function(t){ return {label:t,src:t}; }),"#e0a800");
+    sect("⛔ Вне рутины (пишите вручную)",r.stops.map(function(t){ return {label:t,src:t}; }),"#dc3545");
+    var apply=document.createElement("button"); apply.textContent="Вставить заключение";
+    apply.style.cssText="width:100%;padding:8px;margin-top:12px;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;";
+    apply.onclick=function(){ ov.remove(); self.run(api); }; box.appendChild(apply);
+    var cl=document.createElement("button"); cl.textContent="Закрыть";
+    cl.style.cssText="width:100%;padding:8px;margin-top:6px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;";
+    cl.onclick=function(){ ov.remove(); }; box.appendChild(cl);
+    ov.appendChild(box); ov.onclick=function(e){ if(e.target===ov) ov.remove(); }; document.body.appendChild(ov); }
+};
+if(typeof exports!=="undefined"){ for(var k in VnkSummary) exports[k]=VnkSummary[k]; }
+else if(typeof module!=="undefined"){ module.exports=VnkSummary; }
+else { window.VnkSummary=VnkSummary; }
